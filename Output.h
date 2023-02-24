@@ -71,6 +71,13 @@ public:
     inline const auto& GetAmbientIntensity() const { return ai; }
     inline const auto& GetBgColor() const { return bkc; }
 
+    inline bool HasGlobalIllumination() 
+    { 
+        if (global_illum) return *global_illum;
+        
+        return false;
+    }
+    
     inline auto GetGlobalIllum() { return global_illum; }
     inline auto GetRaysPerPixel() { return rays_per_pixel; }
     inline auto GetMaxBounce() { return max_bounce; }
@@ -115,7 +122,7 @@ private:
     Eigen::Vector2i* rays_per_pixel = nullptr;
     unsigned int* max_bounce = nullptr;
     double* probe_terminate = nullptr; //?? wats this thing??
-
+    bool contains_area_light = false;
     std::vector<Color>* ppm_buffer = nullptr;
 };
 

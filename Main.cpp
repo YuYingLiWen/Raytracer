@@ -3,11 +3,6 @@
 #include <sstream>
 #include <fstream>
 #include <string>
-#include <memory>
-#include <vector>
-#include <exception>
-#include <string>
-#include "Scene.h"
 #include "RayTracer.h"
 
 #include "external/json.hpp"
@@ -17,7 +12,7 @@ Scene* LoadScene(std::string&);
 
 int main()
 {
-    std::string files[] = {"cornell_box_empty_pl"};
+    //std::string files[] = {"cornell_box_empty_pl"};
     //std::string files[] = {"cornell_box"};
     //std::string files[] = { "test_scene1" };
     //std::string files[] = { "test_area_light1" };
@@ -26,7 +21,7 @@ int main()
 
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
-    //std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
+    std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
 
     //std::string files[] = {"test_scene2"};
 
@@ -50,4 +45,5 @@ int main()
         tracer.run();
     }
 
+    std::cin.get();
 }

@@ -285,8 +285,8 @@ void RayTracer::Trace()
 
     size_t buffer_size = buffer.size();
 
-    uint32_t height = output->GetHeight();
-    uint32_t width = output->GetWidth();
+    uint16_t height = output->GetHeight();
+    uint16_t width = output->GetWidth();
 
     const double aspect_ratio = (double)width / (double)height;
     const double pixel = std::tan(Deg2Rad * output->GetFOV() * 0.5f);
@@ -302,9 +302,11 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    uint32_t sample_size = 10;
+    uint16_t sample_size =  output->GetRaysPerPixel() ? output->GetRaysPerPixel()->y() : 1;
+    uint16_t grid_size = output->GetRaysPerPixel() ? output->GetRaysPerPixel()->x() : 1;
 
-    bool use_AA = false;
+    bool use_AA = !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_specular = !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
     for (uint32_t y = 0; y < height; y++)

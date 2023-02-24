@@ -38,6 +38,13 @@ public:
     const auto& GetLights() const { return lights; }
     const auto& GetOuput() const { return output; }
 
+    bool HasAreaLight() {
+        for (Light* l: *lights)
+        {
+            if (l->GetType() == AREA_LIGHT) return true;
+        }
+        return false;
+    }
 
     void PrintGeometries() 
     {
