@@ -1,5 +1,0 @@
-﻿  Main.cpp
-  RayTracer.cpp
-C:\Users\Sandbox\Desktop\New folder\cppJsonTest\Random.h(10,23): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  Generating Code...
-  cppJsonTest.vcxproj -> C:\Users\Sandbox\Desktop\New folder\cppJsonTest\x64\Debug\cppJsonTest.exe
