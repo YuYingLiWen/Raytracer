@@ -44,6 +44,15 @@ public:
     float G() const { return color.y(); }
     float B() const { return color.z(); }
     
+    
+    Color& operator*= (const Color& other)
+    {
+        color.x() *= other.R();
+        color.y() *= other.G();
+        color.z() *= other.B();
+        return *this;
+    }
+
     // Handamard product
     Color operator* (const Color& other) const
     {

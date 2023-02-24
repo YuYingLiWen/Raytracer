@@ -22,32 +22,29 @@ public:
     virtual ~Geometry() {}
 
     inline const auto& GetType() const { return type; }
-    inline float GetAmbientCoeff() const { return ka; }
-    inline float GetDiffuseCoeff() const { return kd; }
-    inline float GetSpecularCoeff() const { return ks; }
     inline float GetPhongCoeff() const { return pc; }
     inline auto GetAmbientColor() const { return ac; }
     inline auto GetDiffuseColor() const { return dc; }
     inline auto GetSpecularColor() const { return sc; }
     inline const auto& GetComment() const { return comment; }
-    inline Color GetAmbientColorCoeff() { return ac * ka; }
-    inline Color GetDiffuseColorCoeff() { return dc * kd; }
-    inline Color GetSpecularColorCoeff() { return sc * ks; }
-    inline Color GetColorMixture(const Color& ai) 
-    { 
-        //Color final_ambient{ ai.R() * ac.R() * ka, ai.G() * ac.G() * ka, ai.B() * ac.B() * ka };
-        Color final_ambient = (ac * ai) * ka;
-        Color final_diffuse = dc * intensity_diffuse * kd;
-        return final_ambient + final_diffuse;
-    }
+    inline Color GetAmbientColor(const Color& ai) { return ai * ac * ka; }
+    inline Color GetDiffuseColor() { return dc * kd * intensity_diffuse; }
+    inline Color GetSpecularColor() { return sc * ks; }
+    //inline Color GetColorMixture(const Color& ai) 
+    //{ 
+    //    //Color final_ambient{ ai.R() * ac.R() * ka, ai.G() * ac.G() * ka, ai.B() * ac.B() * ka };
+    //    Color final_ambient = (ac * ai) * ka;
+    //    Color final_diffuse = dc * intensity_diffuse * kd;
+    //    return final_ambient + final_diffuse;
+    //}
 
     virtual std::string ToString() const
     {
         return "\nType: " + GetType() +
                "\nComment: " + GetComment() +
-               "\nAmbient Coeff: " + std::to_string(GetAmbientCoeff()) +
-               "\nDiffuse Coeff: " + std::to_string(GetDiffuseCoeff()) +
-               "\nSpecular Coeff: " + std::to_string(GetSpecularCoeff()) +
+               "\nAmbient Coeff: " + std::to_string(ka) +
+               "\nDiffuse Coeff: " + std::to_string(kd) +
+               "\nSpecular Coeff: " + std::to_string(ks) +
                "\nPhong Coeff: " + std::to_string(GetPhongCoeff()) +
                "\nAmbient Color " + GetAmbientColor().ToString() +
                "\nDiffuse Color " + GetDiffuseColor().ToString() +

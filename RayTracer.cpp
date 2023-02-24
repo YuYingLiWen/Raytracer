@@ -302,7 +302,9 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    uint32_t sample_size = 4;
+    uint32_t sample_size = 10;
+
+    bool use_AA = false;
 
     // For each height, trace its row
     for (uint32_t y = 0; y < height; y++)
@@ -311,10 +313,11 @@ void RayTracer::Trace()
         for (uint32_t x = 0; x < width ; x++)
         {
             Color sample_color;
+            Color diffuse_color;
 
             for (uint16_t sample = 0; sample < sample_size; sample++) // Samples area color around the current pixel
             {
-                double rand = rng.Generate(pixel_center); // For AA
+                double rand = use_AA ? rng.Generate(pixel_center) : 0.0f; // For AA
 
                 px = (x_scaled_pixel - (2.0f * x + 1.0f + rand) * pixel_center) * right; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
                 py = (pixel - (2.0f * y + 1.0f + rand) * pixel_center) * up; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
@@ -324,10 +327,13 @@ void RayTracer::Trace()
 
                 if (Raycast(ray))
                 {
-                    sample_color = (sample_color + ray.hit_obj->GetColorMixture(output->GetAmbientIntensity())) * 0.5;
-
+                    if(sample == 0) sample_color = ray.hit_obj->GetAmbientColor(output->GetAmbientIntensity());
+                    else sample_color = (sample_color + ray.hit_obj->GetAmbientColor(output->GetAmbientIntensity())) * 0.5f;
+                    
                     GetDiffuseColor(ray);
 
+                    if (sample == 0) diffuse_color = ray.hit_obj->GetDiffuseColor();
+                    //else diffuse_color = (diffuse_color + ray.hit_obj->GetDiffuseColor());
                 }
                 else 
                 {
@@ -336,7 +342,7 @@ void RayTracer::Trace()
                 }
             }
 
-            buffer[counter] = sample_color;
+            buffer[counter] = sample_color + diffuse_color;
 
             counter++;
         }
