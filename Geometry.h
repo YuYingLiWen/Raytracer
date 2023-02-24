@@ -9,13 +9,13 @@ class Geometry
 {
 public:
     Geometry() {}
-    Geometry(std::string& type, std::string& comment)
-        :type(type), comment(comment) 
+    Geometry(std::string& type)
+        :type(type)
     {
     }
     
-    Geometry(std::string& type, std::string& comment, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc)
-        : type(type), ka(ka), kd(kd), ks(ks), pc(pc), ac(ac), dc(dc), sc(sc), comment(comment)
+    Geometry(std::string& type, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc)
+        : type(type), ka(ka), kd(kd), ks(ks), pc(pc), ac(ac), dc(dc), sc(sc)
     {
     }
 
@@ -26,7 +26,6 @@ public:
     inline auto GetAmbientColor() const { return ac; }
     inline auto GetDiffuseColor() const { return dc; }
     inline auto GetSpecularColor() const { return sc; }
-    inline const auto& GetComment() const { return comment; }
     inline Color GetAmbientColor(const Color& ai) { return ai * ac * ka; }
     inline Color GetDiffuseColor() { return dc * kd * intensity_diffuse; }
     inline Color GetSpecularColor() { return sc * ks; }
@@ -41,7 +40,6 @@ public:
     virtual std::string ToString() const
     {
         return "\nType: " + GetType() +
-               "\nComment: " + GetComment() +
                "\nAmbient Coeff: " + std::to_string(ka) +
                "\nDiffuse Coeff: " + std::to_string(kd) +
                "\nSpecular Coeff: " + std::to_string(ks) +
@@ -59,7 +57,6 @@ public:
 
 protected:
     std::string type;
-    std::string comment;
     Color ac; // ambient color,
     Color dc; // diffuse color, 
     Color sc; // specular color

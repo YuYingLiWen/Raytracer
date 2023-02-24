@@ -12,8 +12,8 @@ class Sphere : public Geometry
 {
 
 public:
-    Sphere(std::string& type, std::string& comment, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc, Eigen::Vector3d& center, double& radius)
-        : Geometry(type, comment, ka, kd, ks, pc, ac, dc, sc), center(center), radius(radius)
+    Sphere(std::string& type, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc, Eigen::Vector3d& center, double& radius)
+        : Geometry(type, ka, kd, ks, pc, ac, dc, sc), center(center), radius(radius)
     {
     }
     ~Sphere() {};

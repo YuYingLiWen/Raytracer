@@ -23,8 +23,8 @@ public:
         normal = ((p2 - p1).cross(p3 - p1)).normalized();
     }
 
-    Rectangle(std::string& type, std::string& comment, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
-        : Geometry(type, comment, ka, kd, ks, pc, ac, dc, sc), p1(p1), p2(p2), p3(p3), p4(p4) 
+    Rectangle(std::string& type, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
+        : Geometry(type, ka, kd, ks, pc, ac, dc, sc), p1(p1), p2(p2), p3(p3), p4(p4) 
     {
         auto l1 = (p2 - p1).norm();
         auto l2 = (p4 - p1).norm();

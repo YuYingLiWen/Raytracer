@@ -7,6 +7,8 @@
 #include "Output.h"
 #include "Scene.h"
 
+using namespace Eigen;
+
 nlohmann::basic_json<>::value_type JSONGetValue(nlohmann::json& j, std::string value)
 {
     try {
@@ -25,8 +27,6 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
         auto& value = item.value();
         std::string type = (std::string)value.at("type");
 
-        std::string comment = (JSONGetValue(value, "comment") == nullptr) ? "N/A" : (std::string)JSONGetValue(value, "comment");
-
         auto& val_ac = value.at("ac");
         auto& val_dc = value.at("dc");
         auto& val_sc = value.at("sc");
@@ -42,7 +42,7 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
 
         if (type == "rectangle")
         {
-            Eigen::Vector3d points[4];
+            Vector3d points[4];
 
             for (int i = 0; i < 4; i++) // read the 4 points
             {
@@ -52,9 +52,9 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
                 auto y = (double)val_p.at(1);
                 auto z = (double)val_p.at(2);
 
-                points[i] = Eigen::Vector3d(x, y, z);
+                points[i] = Vector3d(x, y, z);
             }
-            Rectangle* rect = new Rectangle(type, comment, ka, kd, ks, pc, ac, dc, sc, points[0], points[1], points[2], points[3]);
+            Rectangle* rect = new Rectangle(type, ka, kd, ks, pc, ac, dc, sc, points[0], points[1], points[2], points[3]);
 
             scene_geo->push_back((Geometry*)rect);
         }
@@ -64,9 +64,9 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
             auto radius = (double)value.at("radius");
 
 
-            Eigen::Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
+            Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
 
-            Sphere* sphere = new Sphere(type, comment, ka, kd, ks, pc, ac, dc, sc, center, radius);
+            Sphere* sphere = new Sphere(type, ka, kd, ks, pc, ac, dc, sc, center, radius);
             scene_geo->push_back((Geometry*)sphere);
         }
         else
@@ -91,12 +91,12 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
 
         if (type == "area")
         {
-            Eigen::Vector3d points[4];
+            Vector3d points[4];
 
             for (int i = 0; i < 4; i++) // read the 4 points
             {
                 auto& val_p = value.at("p" + std::to_string(i + 1));
-                points[i] = Eigen::Vector3d((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
+                points[i] = Vector3d((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
             }
 
             AreaLight* area = new AreaLight(type, id, is, points[0], points[1], points[2], points[3]);
@@ -107,7 +107,7 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
         {
             auto& val_p = value.at("centre");
 
-            Eigen::Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
+            Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
 
             PointLight* point = new PointLight(type, id, is, center);
             scene_lights->push_back((Light*)point);
@@ -123,43 +123,35 @@ void JSONReadOutput(Output* scene_output, nlohmann::json& output)
 {
     nlohmann::json value = output.at(0);
 
+    OutputData data;
+
     // Mandatory
     auto& val_look = value.at("lookat");
     auto& val_up = value.at("up");
-    std::string file_name = (std::string)value.at("filename");
     auto& val_bkc = value.at("bkc");
     auto& val_ai = value.at("ai");
     auto& val_size = value.at("size");
     auto& val_center = value.at("centre");
-    float fov = (float)value.at("fov");
 
-    Color ai(val_ai.at(0), val_ai.at(1), val_ai.at(2));
-    Color bkc(val_bkc.at(0), val_bkc.at(1), val_bkc.at(2));
-    Eigen::Vector2i size(val_size.at(0), val_size.at(1));
-    Eigen::Vector3d up(val_up.at(0), val_up.at(1), val_up.at(2));
-    Eigen::Vector3d lookat(val_look.at(0), val_look.at(1), val_look.at(2));
-    Eigen::Vector3d center(val_center.at(0), val_center.at(1), val_center.at(2));
+    data.file_name = (std::string)value.at("filename");
+    data.fov = (float)value.at("fov");
+    data.ai = Color(val_ai.at(0), val_ai.at(1), val_ai.at(2));
+    data.bkc = Color(val_bkc.at(0), val_bkc.at(1), val_bkc.at(2));
+    data.size = Vector2i(val_size.at(0), val_size.at(1));
+    data.up = Vector3d(val_up.at(0), val_up.at(1), val_up.at(2));
+    data.look_at = Vector3d(val_look.at(0), val_look.at(1), val_look.at(2));
+    data.center = Vector3d(val_center.at(0), val_center.at(1), val_center.at(2));
 
-    // Check if have global illum (for the extra data)
-    if (JSONGetValue(value, "globalillum") != nullptr)
+    if (JSONGetValue(value, "globalillum") != nullptr) data.global_illum = new bool(JSONGetValue(value, "globalillum"));
+    if (JSONGetValue(value, "probterminate") != nullptr) data.probe_terminate = new double(JSONGetValue(value, "probterminate"));
+    if (JSONGetValue(value, "maxbounces") != nullptr) data.max_bounce = new unsigned int(JSONGetValue(value, "maxbounces"));
+    if (JSONGetValue(value, "raysperpixel") != nullptr)
     {
-        //Extra
-        OutputExtra* extra = new OutputExtra();
+        auto val_ray_per_pixel = JSONGetValue(value, "raysperpixel");
+        data.rays_per_pixel = new Vector2i(val_ray_per_pixel.at(0), val_ray_per_pixel.at(1));
+    }
 
-        if (JSONGetValue(value, "globalillum") != nullptr) extra->global_illum = new bool(JSONGetValue(value, "globalillum"));
-        if (JSONGetValue(value, "probterminate") != nullptr) extra->probe_terminate = new double(JSONGetValue(value, "probterminate"));
-        if (JSONGetValue(value, "maxbounces") != nullptr) extra->max_bounce = new unsigned int(JSONGetValue(value, "maxbounces"));
-        if (JSONGetValue(value, "raysperpixel") != nullptr)
-        {
-            auto val_ray_per_pixel = JSONGetValue(value, "raysperpixel");
-            extra->rays_per_pixel = new Eigen::Vector2i(val_ray_per_pixel.at(0), val_ray_per_pixel.at(1));
-        }
-        scene_output->Set(file_name, size, up, lookat, center, fov, ai, bkc, extra);
-    }
-    else
-    {
-        scene_output->Set(file_name, size, up, lookat, center, fov, ai, bkc);
-    }
+    scene_output->Set(data);
 }
 
 
