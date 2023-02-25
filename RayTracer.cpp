@@ -173,8 +173,10 @@ Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
 
     Color intensity;
 
-    for (auto light : *lights)
+    for (auto& light : *lights)
     {
+        if (!light->GetUse()) continue;
+
         if (light->GetType() == POINT_LIGHT)
         {
             PointLight& point = *(PointLight*)light;
@@ -192,46 +194,51 @@ Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
         {
             AreaLight& area = *(AreaLight*)light;
 
+            if (area.GetUseCenter()) 
+            {
+                // Not Implemented
+            }
+            else 
+            {
+                Vector3d hit_dir1 = area.GetP1() - hit_coor;
+                Vector3d hit_dir2 = area.GetP2() - hit_coor;
+                Vector3d hit_dir3 = area.GetP3() - hit_coor;
+                Vector3d hit_dir4 = area.GetP4() - hit_coor;
 
-            Vector3d hit_dir1 = area.GetP1() - hit_coor;
-            Vector3d hit_dir2 = area.GetP2() - hit_coor;
-            Vector3d hit_dir3 = area.GetP3() - hit_coor;
-            Vector3d hit_dir4 = area.GetP4() - hit_coor;
+
+                Ray ray1(hit_coor, area.GetP1() - hit_coor);
+                Ray ray2(hit_coor, area.GetP2() - hit_coor);
+                Ray ray3(hit_coor, area.GetP3() - hit_coor);
+                Ray ray4(hit_coor, area.GetP4() - hit_coor);
+
+                if (IsHit(ray1, area.GetRectangle())) {
+
+                }
+
+                /*if (!Raycast(ray1) || !Raycast(ray2) || !Raycast(ray3) || !Raycast(ray4))
+                {
+                    area
+                }*/
 
 
-            Ray ray1(hit_coor, area.GetP1() - hit_coor);
-            Ray ray2(hit_coor, area.GetP2() - hit_coor);
-            Ray ray3(hit_coor, area.GetP3() - hit_coor);
-            Ray ray4(hit_coor, area.GetP4() - hit_coor);
-            
-            if (IsHit(ray1, area.GetRectangle())) {
+                double cos_angle1 = (hit_dir1).dot(normal);
+                double cos_angle2 = (hit_dir2).dot(normal);
+                double cos_angle3 = (hit_dir3).dot(normal);
+                double cos_angle4 = (hit_dir4).dot(normal);
+
+
+                if (cos_angle1 < 0.0f) cos_angle1 = 0.0f;
+                if (cos_angle2 < 0.0f) cos_angle2 = 0.0f;
+                if (cos_angle3 < 0.0f) cos_angle3 = 0.0f;
+                if (cos_angle4 < 0.0f) cos_angle4 = 0.0f;
+
+
+                intensity += (light->GetDiffuseIntensity() / hit_dir1.norm()) * cos_angle1;
+                //intensity += (light->GetDiffuseIntensity() / hit_dir2.norm()) * cos_angle2;
+                //intensity += (light->GetDiffuseIntensity() / hit_dir3.norm()) * cos_angle3;
+                //intensity += (light->GetDiffuseIntensity() / hit_dir4.norm()) * cos_angle4;
 
             }
-
-            /*if (!Raycast(ray1) || !Raycast(ray2) || !Raycast(ray3) || !Raycast(ray4))
-            {
-                area
-            }*/
-
-
-            double cos_angle1 = (hit_dir1).dot(normal);
-            double cos_angle2 = (hit_dir2).dot(normal);
-            double cos_angle3 = (hit_dir3).dot(normal);
-            double cos_angle4 = (hit_dir4).dot(normal);
-
-
-            if (cos_angle1 < 0.0f) cos_angle1 = 0.0f;
-            if (cos_angle2 < 0.0f) cos_angle2 = 0.0f;
-            if (cos_angle3 < 0.0f) cos_angle3 = 0.0f;
-            if (cos_angle4 < 0.0f) cos_angle4 = 0.0f;
-
-
-            intensity += (light->GetDiffuseIntensity() / hit_dir1.norm()) * cos_angle1;
-            //intensity += (light->GetDiffuseIntensity() / hit_dir2.norm()) * cos_angle2;
-            //intensity += (light->GetDiffuseIntensity() / hit_dir3.norm()) * cos_angle3;
-            //intensity += (light->GetDiffuseIntensity() / hit_dir4.norm()) * cos_angle4;
-
-
         }
 
     }
@@ -302,10 +309,10 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    uint16_t sample_size =  output->GetRaysPerPixel() ? output->GetRaysPerPixel()->y() : 1;
-    uint16_t grid_size = output->GetRaysPerPixel() ? output->GetRaysPerPixel()->x() : 1;
+    uint16_t sample_size = 10;//  output->GetRaysPerPixel() ? output->GetRaysPerPixel()->y() : 1;
+    uint16_t grid_size = 10;// output->GetRaysPerPixel() ? output->GetRaysPerPixel()->x() : 1;
 
-    bool use_AA = !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = true;//!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular = !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
@@ -319,7 +326,7 @@ void RayTracer::Trace()
 
             for (uint16_t sample = 0; sample < sample_size; sample++) // Samples area color around the current pixel
             {
-                double rand = use_AA ? rng.Generate(pixel_center) : 0.0f; // For AA
+                double rand = use_AA ? rng.Generate(pixel_center * grid_size) : 0.0f; // For AA
 
                 px = (x_scaled_pixel - (2.0f * x + 1.0f + rand) * pixel_center) * right; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
                 py = (pixel - (2.0f * y + 1.0f + rand) * pixel_center) * up; //(2.0f * y + 1.0f) == 2k + 1 aka odd number

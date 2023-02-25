@@ -16,8 +16,8 @@ private:
     Eigen::Vector3d center;
 public:
     PointLight() = delete;
-    PointLight(std::string type, Color id, Color is, Eigen::Vector3d center)
-        : Light(type, id, is), center(center)
+    PointLight(std::string type, Color id, Color is, Eigen::Vector3d center, bool use)
+        : Light(type, id, is, use), center(center)
     {
     }
 

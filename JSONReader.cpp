@@ -88,7 +88,8 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
         Color id(val_id.at(0), val_id.at(1), val_id.at(2));
         Color is(val_is.at(0), val_is.at(1), val_is.at(2));
 
-
+        bool use = (JSONGetValue(value, "use") != nullptr) ? (bool)JSONGetValue(value, "use") : true;
+        
         if (type == "area")
         {
             Vector3d points[4];
@@ -99,7 +100,9 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
                 points[i] = Vector3d((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
             }
 
-            AreaLight* area = new AreaLight(type, id, is, points[0], points[1], points[2], points[3]);
+            bool use_center = (JSONGetValue(value, "usecenter") != nullptr) ? (bool)JSONGetValue(value, "usecenter") : true;
+
+            AreaLight* area = new AreaLight(type, id, is, use, points[0], points[1], points[2], points[3], use_center);
 
             scene_lights->push_back((Light*)area);
         }
@@ -109,7 +112,7 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
 
             Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
 
-            PointLight* point = new PointLight(type, id, is, center);
+            PointLight* point = new PointLight(type, id, is, center, use);
             scene_lights->push_back((Light*)point);
         }
         else

@@ -10,10 +10,11 @@ class AreaLight : public Light
 {
 private:
     Rectangle rectangle;
+    bool use_center = false;
 public:
     AreaLight() = delete;
-    AreaLight(std::string type, Color id, Color is, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
-        : Light(type, id, is), rectangle(p1,p2,p3,p4)
+    AreaLight(std::string type, Color id, Color is, bool use, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center)
+        : Light(type, id, is, use), rectangle(p1,p2,p3,p4), use_center(use_center)
     {
 
     }
@@ -28,6 +29,7 @@ public:
     inline const auto& GetP4() const { return rectangle.GetP4(); }
 
     inline const auto& GetRectangle() const { return rectangle; }
+    inline bool GetUseCenter() const { return use_center; }
 
 
     friend std::ostream& operator << (std::ostream& os, const AreaLight& al)

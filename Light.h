@@ -7,6 +7,7 @@
 class Light
 {
 protected:
+    bool use = true;
     std::string type;
     Color id, is; // Intensity diffuse, itensity specular
 public:
@@ -14,8 +15,8 @@ public:
     {
     }
 
-    Light(std::string type, Color id, Color is)
-        : type(type), id(id), is(is)
+    Light(std::string type, Color id, Color is, bool use)
+        : type(type), id(id), is(is), use(use)
     {
     }
     virtual ~Light()
@@ -25,6 +26,7 @@ public:
     inline const auto& GetType() const { return type; }
     inline auto GetDiffuseIntensity() const { return id; }
     inline auto GetSpecularIntensity() const { return is; }
+    inline auto GetUse() const { return use; }
 
     friend std::ostream& operator << (std::ostream& os, const Light& l)
     {
