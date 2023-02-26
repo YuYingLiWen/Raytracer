@@ -6,17 +6,31 @@
 
 #define AREA_LIGHT "area"
 
+using namespace Eigen;
+
 class AreaLight : public Light
 {
 private:
     Rectangle rectangle;
     bool use_center = false;
+    Eigen::Vector3d center;
 public:
     AreaLight() = delete;
-    AreaLight(std::string type, Color id, Color is, bool use, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center)
-        : Light(type, id, is, use), rectangle(p1,p2,p3,p4), use_center(use_center)
+    AreaLight(std::string type, Color id, Color is, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center)
+        : Light(type, id, is), rectangle(p1,p2,p3,p4), use_center(use_center)
     {
+        if (use_center) 
+        {
+            //1 & 3 => y = ax + b
+            //2 & 4 => y = dx + c
 
+            Vector3d a = (p1 - p3); // b = 1
+            Vector3d d = (p2 - p4); // c = 2
+            
+            double x = (p2 - p1).norm() / (a - d).norm();
+
+            center = a* x + p3;
+        }
     }
 
     ~AreaLight()
@@ -28,8 +42,10 @@ public:
     inline const auto& GetP3() const { return rectangle.GetP3(); }
     inline const auto& GetP4() const { return rectangle.GetP4(); }
 
-    inline const auto& GetRectangle() const { return rectangle; }
+    inline auto& GetRectangle() { return rectangle; }
     inline bool GetUseCenter() const { return use_center; }
+    inline auto& GetCenter() const { return center; }
+
 
 
     friend std::ostream& operator << (std::ostream& os, const AreaLight& al)

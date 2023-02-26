@@ -84,13 +84,12 @@ public:
     // Returns an array of object that ray intersected with.
     std::vector<Geometry*> RaycastAll(const Ray& ray);
 
-    bool IsHit(const Ray& ray, const Sphere& sphere);
-
-    bool IsHit(const Ray& ray, const Rectangle& rect);
+    bool IsHit(const Ray& ray, Sphere& sphere);
+    bool IsHit(const Ray& ray, Rectangle& rect);
 
     // Saves the closest hit point on the sphere to ray
-    bool IntersectCoor(const Ray& ray, const Sphere& sphere, Vector3d& intersect);
-    bool IntersectCoor(const Ray& ray, const Rectangle& rect, Vector3d& intersect); 
+    bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
+    bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect); 
 
     // Returns integral of intensities of Color for each RGB channel
     Color GetShading(const Vector3d& normal, const Vector3d& hit_coor);

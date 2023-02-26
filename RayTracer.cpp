@@ -81,7 +81,7 @@ std::vector<Geometry*> RayTracer::RaycastAll(const Ray& ray)
 
 ///          SPHERE            ///
 
-bool RayTracer::IsHit(const Ray& ray, const Sphere& sphere)
+bool RayTracer::IsHit(const Ray& ray, Sphere& sphere)
 {
     double a, b, c;
 
@@ -95,7 +95,7 @@ bool RayTracer::IsHit(const Ray& ray, const Sphere& sphere)
     return !(YuMath::Discriminant(a, b, c) < 0);
 }
 
-bool RayTracer::IntersectCoor(const Ray& ray, const Sphere& sphere, Eigen::Vector3d& intersect)
+bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Eigen::Vector3d& intersect)
 {
     double a, b, c;
 
@@ -121,46 +121,54 @@ bool RayTracer::IntersectCoor(const Ray& ray, const Sphere& sphere, Eigen::Vecto
 
 /// RECTANGLE
 
-bool RayTracer::IsHit(const Ray& ray, const Rectangle& rect)
+bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
 {
-    if (ray.GetDirection().dot(rect.GetNormal()) == 0) return false;
+    auto vn = ray.GetDirection().dot(rect.GetNormal()); 
+    
+    if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
 
-    auto vn = ray.GetDirection().dot(rect.GetNormal());
-    auto an = rect.GetP1().dot(rect.GetNormal());
-    auto og = ray.GetOrigin().dot(rect.GetNormal());
 
-    auto t = (an - og) / (vn);
+    // To get this formula, first find formula for intersection between a plane and a line(ray)
+    // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
+    // finally, simplify it due to the cluster of negative sign and dot product. 
+    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn; 
     
 
     if(t == 0) return false;
 
-    auto point = ray.GetPoint(t);
+    auto hit_point = ray.GetPoint(t);
 
-    double area1 = YuMath::HeronTriangle(point, rect.GetP1(), rect.GetP2());
-    double area2 = YuMath::HeronTriangle(point, rect.GetP2(), rect.GetP3());
-    double area3 = YuMath::HeronTriangle(point, rect.GetP3(), rect.GetP4());
-    double area4 = YuMath::HeronTriangle(point, rect.GetP4(), rect.GetP1());
+    long double area1 = YuMath::HeronTriangle(hit_point, rect.GetP1(), rect.GetP2());
+    long double area2 = YuMath::HeronTriangle(hit_point, rect.GetP2(), rect.GetP3());
+    long double area3 = YuMath::HeronTriangle(hit_point, rect.GetP3(), rect.GetP4());
+    long double area4 = YuMath::HeronTriangle(hit_point, rect.GetP4(), rect.GetP1());
 
     auto sum = (area1 + area2 + area3 + area4);
     auto area = rect.GetArea();
     auto area_delta = rect.GetArea() - sum;
-    auto is_in = std::abs(area_delta) < 0.001f;
+
+    auto is_in = std::abs(area_delta) < 0.05f;
 
     return (is_in); 
 }
 
-
-
-bool RayTracer::IntersectCoor(const Ray& ray, const Rectangle& rect, Eigen::Vector3d& intersect)
+bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Eigen::Vector3d& intersect)
 {
-    if (ray.GetDirection().dot(rect.GetNormal()) == 0) return false;
 
     auto vn = ray.GetDirection().dot(rect.GetNormal());
-    auto an = rect.GetP1().dot(rect.GetNormal());
-    auto og = ray.GetOrigin().dot(rect.GetNormal());
 
-    auto dir = ray.GetDirection();
-    auto t = (an - og) / (vn);
+    if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
+
+    //if (vn > 0.0f)
+    //{
+    //    //rect.RecalculateNormal();
+    //    vn = ray.GetDirection().dot(-rect.GetNormal());
+    //}
+
+    // To get this formula, first find formula for intersection between a plane and a line(ray)
+    // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
+    // finally, simplify it due to the cluster of negative sign and dot product. 
+    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn;
 
     intersect = ray.GetPoint(t);
 
@@ -175,8 +183,6 @@ Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
 
     for (auto& light : *lights)
     {
-        if (!light->GetUse()) continue;
-
         if (light->GetType() == POINT_LIGHT)
         {
             PointLight& point = *(PointLight*)light;
@@ -196,7 +202,13 @@ Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
 
             if (area.GetUseCenter()) 
             {
-                // Not Implemented
+                Vector3d hit_dir = area.GetCenter() - hit_coor;
+
+                double cos_angle = (hit_dir).dot(normal);
+
+                if (cos_angle < 0.0f) cos_angle = 0.0f;
+
+                intensity += (light->GetDiffuseIntensity() / hit_dir.norm()) * cos_angle;
             }
             else 
             {
@@ -309,10 +321,10 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    uint16_t sample_size = 10;//  output->GetRaysPerPixel() ? output->GetRaysPerPixel()->y() : 1;
-    uint16_t grid_size = 10;// output->GetRaysPerPixel() ? output->GetRaysPerPixel()->x() : 1;
+    uint16_t sample_size = 1;//output->GetRaysPerPixel() ? output->GetRaysPerPixel()->y() : 1;
+    uint16_t grid_size = 1;// output->GetRaysPerPixel() ? output->GetRaysPerPixel()->x() : 1;
 
-    bool use_AA = true;//!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular = !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
@@ -328,8 +340,8 @@ void RayTracer::Trace()
             {
                 double rand = use_AA ? rng.Generate(pixel_center * grid_size) : 0.0f; // For AA
 
-                px = (x_scaled_pixel - (2.0f * x + 1.0f + rand) * pixel_center) * right; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-                py = (pixel - (2.0f * y + 1.0f + rand) * pixel_center) * up; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+                px = (x_scaled_pixel - (2.0f * x + 1.0f) * pixel_center) * right; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+                py = (pixel - (2.0f * y + 1.0f) * pixel_center) * up; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
                 pixel_shoot_at = origin_look_at + px + py;
 
                 Ray ray(output->GetCenter(), pixel_shoot_at - output->GetCenter());

@@ -14,14 +14,15 @@ public:
     {
     }
     
-    Geometry(std::string& type, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc)
-        : type(type), ka(ka), kd(kd), ks(ks), pc(pc), ac(ac), dc(dc), sc(sc)
+    Geometry(std::string& type, std::string& name,float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc)
+        : type(type), name(name), ka(ka), kd(kd), ks(ks), pc(pc), ac(ac), dc(dc), sc(sc)
     {
     }
 
     virtual ~Geometry() {}
 
     inline const auto& GetType() const { return type; }
+    inline const auto& GetName() const { return name; }
     inline float GetPhongCoeff() const { return pc; }
     inline auto GetAmbientColor() const { return ac; }
     inline auto GetDiffuseColor() const { return dc; }
@@ -57,6 +58,7 @@ public:
 
 protected:
     std::string type;
+    std::string name;
     Color ac; // ambient color,
     Color dc; // diffuse color, 
     Color sc; // specular color

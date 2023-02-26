@@ -16,21 +16,35 @@ public:
     Rectangle(Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
         :p1(p1), p2(p2), p3(p3), p4(p4)
     {
+        auto diag1 = (p3 - p1).norm();
+        auto diag2 = (p4 - p2).norm();
+
+
         auto l1 = (p2 - p1).norm();
         auto l2 = (p4 - p1).norm();
-        area = (p2 - p1).norm() * (p4 - p1).norm();
+        area = l1 * l2;
 
-        normal = ((p2 - p1).cross(p3 - p1)).normalized();
+        normal = ((p2 - p1).cross(p4 - p1)).normalized();
     }
 
-    Rectangle(std::string& type, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
-        : Geometry(type, ka, kd, ks, pc, ac, dc, sc), p1(p1), p2(p2), p3(p3), p4(p4) 
+    Rectangle(std::string& type, std::string name, float& ka, float& kd, float& ks, float& pc, Color& ac, Color& dc, Color& sc, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4)
+        : Geometry(type, name, ka, kd, ks, pc, ac, dc, sc), p1(p1), p2(p2), p3(p3), p4(p4) 
     {
-        auto l1 = (p2 - p1).norm();
-        auto l2 = (p4 - p1).norm();
-        area = (p2 - p1).norm() * (p4 - p1).norm();
+        auto diag1 = (p3 - p1).norm();
+        auto diag2 = (p4 - p2).norm();
 
-        normal = ((p2 - p1).cross(p3 - p1)).normalized();
+        if (diag1 != diag2) // its a rhombus
+        {
+            area = diag1 * diag2 * 0.5f;
+        }
+        else 
+        {
+            auto l1 = (p2 - p1).norm();
+            auto l2 = (p4 - p1).norm();
+            area = l1 * l2;
+        }
+
+        normal = ((p2 - p1).cross(p4 - p1)).normalized();
     }
 
     virtual ~Rectangle() {}
@@ -51,7 +65,7 @@ public:
     friend std::ostream& operator << (std::ostream& os, const Rectangle& rect)
     {
         os << rect.ToString() 
-            <<  "P1: (" << rect.GetP1().x() << ", " << rect.GetP1().y() << ", " << rect.GetP1().z() << ")\n"
+            << "P1: (" << rect.GetP1().x() << ", " << rect.GetP1().y() << ", " << rect.GetP1().z() << ")\n"
             << "P2: (" << rect.GetP2().x() << ", " << rect.GetP2().y() << ", " << rect.GetP2().z() << ")\n"
             << "P3: (" << rect.GetP3().x() << ", " << rect.GetP3().y() << ", " << rect.GetP3().z() << ")\n"
             << "P4: (" << rect.GetP4().x() << ", " << rect.GetP4().y() << ", " << rect.GetP4().z() << ")\n";

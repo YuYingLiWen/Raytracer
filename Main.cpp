@@ -13,7 +13,7 @@ Scene* LoadScene(std::string&);
 int main()
 {
     //std::string files[] = {"cornell_box_empty_pl"};
-    std::string files[] = {"cornell_box"};
+    //std::string files[] = {"cornell_box"};
     //std::string files[] = { "test_scene1" };
     //std::string files[] = { "test_area_light1" };
     //std::string files[] = { "test_scene1B" };
@@ -21,7 +21,7 @@ int main()
 
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
-    //std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
+    std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
 
     //std::string files[] = {"test_scene2"};
 
@@ -30,6 +30,8 @@ int main()
     
     for (std::string& scene_name : files) 
     {
+        std::cout << "==== " << scene_name << " ====" << std::endl;
+
         std::ifstream t(scene_name + ".json");
         if (!t) {
             std::cout << "File " << scene_name << " does not exist!" << std::endl;

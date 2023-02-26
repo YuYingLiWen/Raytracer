@@ -49,12 +49,12 @@ namespace YuMath
 
 	double HeronTriangle(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3)
 	{
-		auto a = (p2 - p1).norm();
-		auto b = (p3 - p2).norm();
-		auto c = (p1 - p3).norm();
+		double a = (p2 - p1).norm();
+		double b = (p3 - p2).norm();
+		double c = (p1 - p3).norm();
 
 		// A = root[ s(s-a)(s-b)(s-c) ]
-		auto s = (a + b + c) * 0.5f;
+		double s = (a + b + c) * 0.5f;
 
 
 		return std::sqrt(s * (s - a) *(s - b) * (s-c));
