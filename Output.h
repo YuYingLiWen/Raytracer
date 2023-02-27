@@ -61,13 +61,9 @@ public:
     }
 
     inline const auto& GetFileName() const { return file_name; }
-    inline const auto& GetCenter() const { return center; }
-    inline const auto& GetFOV() const { return fov; }
     inline const auto& GetSize() const { return size; }
-    inline const auto& GetHeight() const { return size.y(); }
-    inline const auto& GetWidth() const { return size.x(); }
-    inline const auto& GetUp() const { return up; }
-    inline const auto& GetLookAt() const { return look_at; }
+
+
     inline const auto& GetAmbientIntensity() const { return ai; }
     inline const auto& GetBgColor() const { return bkc; }
 
@@ -79,9 +75,13 @@ public:
     }
     
     inline auto GetGlobalIllum() { return global_illum; }
-    inline auto GetRaysPerPixel() { return rays_per_pixel; }
     inline auto GetMaxBounce() { return max_bounce; }
     inline auto GetProbeTerminate() { return probe_terminate; } //?? wats this thing??
+
+    // Might need modification due to info from assignment docs
+    inline auto GetRaysPerPixel() { return rays_per_pixel; }
+    inline uint16_t GetRaySampleSize() { return rays_per_pixel != nullptr ? rays_per_pixel->x(): 1; }
+    inline uint16_t GetGridSize() { return rays_per_pixel != nullptr ? rays_per_pixel->y() : 1; }
 
     std::vector<Color>& GetBuffer() 
     {
@@ -94,10 +94,10 @@ public:
     {
         os << "File name: " << out.GetFileName() << '\n'
             << "Size: [" << out.GetSize().x() << "," << out.GetSize().y() << "]\n"
-            << "Up: [" << out.GetUp().x() << "," << out.GetUp().y() << "," << out.GetUp().z() << "]\n"
-            << "Look At: [" << out.GetLookAt().x() << "," << out.GetLookAt().y() << "," << out.GetLookAt().z() << "]\n"
-            << "Center: [" << out.GetCenter().x() << "," << out.GetCenter().y() << "," << out.GetCenter().z() << "]\n"
-            << "FOV: " << out.GetFOV() << '\n'
+            << "Up: [" << out.up.x() << "," << out.up.y() << "," << out.up.z() << "]\n"
+            << "Look At: [" << out.look_at.x() << "," << out.look_at.y() << "," << out.look_at.z() << "]\n"
+            << "Center: [" << out.center.x() << "," << out.center.y() << "," << out.center.z() << "]\n"
+            << "FOV: " << out.fov << '\n'
             << "Ambient Intensity: " << out.GetAmbientIntensity() << '\n'
             << "Background Color: " << out.GetBgColor() << '\n'
             << "Global Illumination: " << (((out.global_illum == nullptr) ? "N/A" : (*out.global_illum == 1) ? "True" : "False")) << '\n'
@@ -107,6 +107,8 @@ public:
             << "Probe Termination: " << ((out.probe_terminate == nullptr) ? "N/A" : std::to_string(*out.probe_terminate)) << '\n';
         return os;
     }
+
+    friend class Camera;
 
 private:
     std::string file_name;

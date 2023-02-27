@@ -95,6 +95,8 @@ public:
     Color GetShading(const Vector3d& normal, const Vector3d& hit_coor);
 
     void GetDiffuseColor(Ray& ray);
+
+    void UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular);
 };
 
 

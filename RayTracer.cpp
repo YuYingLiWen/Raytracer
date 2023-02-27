@@ -1,12 +1,12 @@
 #include "RayTracer.h"
 
-#include "YuMath.h"
-
 #include <fstream>
 #include <memory>
 #include "Random.h"
+#include "YuMath.h" 
+
 //struct Hit {
-//    std::shared_ptr<Eigen::Vector3d> intersect;
+//    std::shared_ptr<Vector3d> intersect;
 //    Geometry* hit_obj;
 //
 //    Hit& operator=(const Hit& hit)
@@ -18,6 +18,8 @@
 //    }
 //};
 
+using namespace Eigen;
+
 bool RayTracer::Raycast(Ray& ray)
 {
     auto objs = RaycastAll(ray);
@@ -28,7 +30,7 @@ bool RayTracer::Raycast(Ray& ray)
     // Find the nearest obj
     for (auto& obj : objs)
     {
-        auto intersect = new Eigen::Vector3d();
+        auto intersect = new Vector3d();
 
         if (obj->GetType() == RECTANGLE)
         {
@@ -85,26 +87,26 @@ bool RayTracer::IsHit(const Ray& ray, Sphere& sphere)
 {
     double a, b, c;
 
-    Eigen::Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
+    Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
     a = ray.GetDirection().dot(ray.GetDirection());
     b = 2.0f * ray.GetDirection().dot(distance);
     c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
 
 
     //std::cout<< a << ' ' << b << ' ' << c << std::endl;
-    return !(YuMath::Discriminant(a, b, c) < 0);
+    return !(Discriminant(a, b, c) < 0);
 }
 
-bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Eigen::Vector3d& intersect)
+bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect)
 {
     double a, b, c;
 
-    Eigen::Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
+    Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
     a = ray.GetDirection().dot(ray.GetDirection());
     b = 2.0f * ray.GetDirection().dot(distance);
     c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
 
-    auto t = YuMath::Quadratic(a, b, c);
+    auto t = Quadratic(a, b, c);
 
     if (!t) return false; // Ouputing imaginary numbers
 
@@ -138,10 +140,10 @@ bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
 
     auto hit_point = ray.GetPoint(t);
 
-    long double area1 = YuMath::HeronTriangle(hit_point, rect.GetP1(), rect.GetP2());
-    long double area2 = YuMath::HeronTriangle(hit_point, rect.GetP2(), rect.GetP3());
-    long double area3 = YuMath::HeronTriangle(hit_point, rect.GetP3(), rect.GetP4());
-    long double area4 = YuMath::HeronTriangle(hit_point, rect.GetP4(), rect.GetP1());
+    long double area1 = HeronTriangle(hit_point, rect.GetP1(), rect.GetP2());
+    long double area2 = HeronTriangle(hit_point, rect.GetP2(), rect.GetP3());
+    long double area3 = HeronTriangle(hit_point, rect.GetP3(), rect.GetP4());
+    long double area4 = HeronTriangle(hit_point, rect.GetP4(), rect.GetP1());
 
     auto sum = (area1 + area2 + area3 + area4);
     auto area = rect.GetArea();
@@ -152,7 +154,7 @@ bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
     return (is_in); 
 }
 
-bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Eigen::Vector3d& intersect)
+bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect)
 {
 
     auto vn = ray.GetDirection().dot(rect.GetNormal());
@@ -286,11 +288,83 @@ void RayTracer::GetDiffuseColor(Ray& ray)
     ray.hit_obj->intensity_diffuse = intensity;
 }
 
+void RayTracer::UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular)
+{
+    const double grid_size = output.GetGridSize();
+    const double sample_size = output.GetRaySampleSize();
+
+    const double subpixel_center = camera.PixelCenter() / grid_size;
+    const double total_samples = grid_size * grid_size * sample_size;
+
+    std::vector<Color> ambient_color_samples;
+    std::vector<Color> diffuse_color_samples;
+    std::vector<Color> specular_color_samples;
 
 
+    //Scanline for each row -> column
+    for (uint16_t grid_y = 0; grid_y < grid_size; grid_y++)
+    {
+        for (uint16_t grid_x = 0; grid_x < grid_size; grid_x++) // Samples area color around the current pixel
+        {
+            Vector3d sub_px = px + (camera.PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center) * camera.Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            Vector3d sub_py = py + (camera.PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * camera.Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            Vector3d subpixel_shoot_at = camera.OriginLookAt() + sub_px + sub_py;
 
+            for (uint16_t sample = 0; sample < sample_size; sample++) // Samples area color around the current pixel
+            {
+                Ray ray = camera.MakeRay(subpixel_shoot_at);
 
+                if (Raycast(ray))
+                {
+                    ambient_color_samples.push_back(ray.hit_obj->GetAmbientColor(output.GetAmbientIntensity()));
 
+                    GetDiffuseColor(ray);
+
+                    diffuse_color_samples.push_back(ray.hit_obj->GetDiffuseColor());
+                }
+                else
+                {
+                    ambient_color_samples.push_back(scene->GetOuput()->GetBgColor());
+                }
+            }
+        }
+    }
+
+    //Ambient
+    double ar = 0.0f, ab = 0.0f, ag = 0.0f;
+
+    for (Color& sample : ambient_color_samples)
+    {
+        ar += sample.R();
+        ab += sample.B();
+        ag += sample.G();
+    }
+
+    //Diffuse
+    double dr = 0.0f, db = 0.0f, dg = 0.0f;
+
+    for (Color& sample : diffuse_color_samples)
+    {
+        dr += sample.R();
+        db += sample.B();
+        dg += sample.G();
+    }
+
+    //Specular
+    double sr = 0.0f, sb = 0.0f, sg = 0.0f;
+
+    for (Color& sample : diffuse_color_samples)
+    {
+        sr += sample.R();
+        sb += sample.B();
+        sg += sample.G();
+    }
+
+    //Final Colors
+    out_final_ambient = Color((float)(ar / total_samples), (float)(ag / total_samples), (float)(ab / total_samples));
+    out_final_diffuse = Color((float)(dr / total_samples), (float)(dg / total_samples), (float)(db / total_samples));
+    out_final_specular = Color((float)(sr / total_samples), (float)(sg / total_samples), (float)(sb / total_samples));
+}
 
 void RayTracer::Trace()
 {
@@ -300,70 +374,59 @@ void RayTracer::Trace()
 
     // Caching lots to precomputed data before casting rays.
     auto& output = scene->GetOuput();
-    auto& buffer = output->GetBuffer();
 
-    size_t buffer_size = buffer.size();
+    Camera camera(*output);
 
-    uint16_t height = output->GetHeight();
-    uint16_t width = output->GetWidth();
+    auto& output_buffer = output->GetBuffer();
 
-    const double aspect_ratio = (double)width / (double)height;
-    const double pixel = std::tan(Deg2Rad * output->GetFOV() * 0.5f);
-    const double x_scaled_pixel = pixel * aspect_ratio;
-    const double pixel_center = pixel / height;
-    
-    const auto origin_look_at = output->GetCenter() + output->GetLookAt();
-    const auto& up = output->GetUp();
+    size_t buffer_size = output_buffer.size();
 
-    const auto right = up.cross(output->GetLookAt());
-
-    Eigen::Vector3d px, py, pixel_shoot_at;
+    Vector3d px, py;
 
     uint32_t counter = 0;
 
-    uint16_t sample_size = 1;//output->GetRaysPerPixel() ? output->GetRaysPerPixel()->y() : 1;
-    uint16_t grid_size = 1;// output->GetRaysPerPixel() ? output->GetRaysPerPixel()->x() : 1;
-
-    bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular = !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
-    for (uint32_t y = 0; y < height; y++)
+    for (uint32_t y = 0; y < camera.Height(); y++)
     {
         //std::cout << std::endl;
-        for (uint32_t x = 0; x < width ; x++)
+        for (uint32_t x = 0; x < camera.Width() ; x++)
         {
-            Color sample_color;
-            Color diffuse_color;
+            Color final_ambient;
+            Color final_diffuse;
+            Color final_specular;
 
-            for (uint16_t sample = 0; sample < sample_size; sample++) // Samples area color around the current pixel
+            px = (camera.ScaledPixel() - (2.0f * x + 1.0f) * camera.PixelCenter()) * camera.Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            py = (camera.HalfImage() - (2.0f * y + 1.0f) * camera.PixelCenter()) * camera.Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+
+            if (use_AA)
             {
-                double rand = use_AA ? rng.Generate(pixel_center * grid_size) : 0.0f; // For AA
+                UseMSAA(camera, *output, px, py, final_ambient, final_diffuse, final_specular);
+            }
+            else 
+            {
 
-                px = (x_scaled_pixel - (2.0f * x + 1.0f) * pixel_center) * right; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-                py = (pixel - (2.0f * y + 1.0f) * pixel_center) * up; //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-                pixel_shoot_at = origin_look_at + px + py;
-
-                Ray ray(output->GetCenter(), pixel_shoot_at - output->GetCenter());
+                Vector3d pixel_shoot_at = camera.OriginLookAt() + px + py;
+                
+                Ray ray = camera.MakeRay(pixel_shoot_at);
 
                 if (Raycast(ray))
                 {
-                    if(sample == 0) sample_color = ray.hit_obj->GetAmbientColor(output->GetAmbientIntensity());
-                    else sample_color = (sample_color + ray.hit_obj->GetAmbientColor(output->GetAmbientIntensity())) * 0.5f;
-                    
+                    final_ambient = ray.hit_obj->GetAmbientColor(output->GetAmbientIntensity());
+
                     GetDiffuseColor(ray);
 
-                    if (sample == 0) diffuse_color = ray.hit_obj->GetDiffuseColor();
-                    //else diffuse_color = (diffuse_color + ray.hit_obj->GetDiffuseColor());
+                    final_diffuse = ray.hit_obj->GetDiffuseColor();
                 }
-                else 
+                else
                 {
-                    sample_color = (sample_color + scene->GetOuput()->GetBgColor());
-                    break;
+                    final_ambient = scene->GetOuput()->GetBgColor();
                 }
             }
 
-            buffer[counter] = sample_color + diffuse_color;
+            output_buffer[counter] = final_ambient + final_diffuse;
 
             counter++;
         }

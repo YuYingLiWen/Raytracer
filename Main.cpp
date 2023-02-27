@@ -19,6 +19,7 @@ int main()
     //std::string files[] = { "test_scene1B" };
     //std::string files[] = { "test_scene3B" };
 
+    //std::string files[] = { "test_scene1B","test_scene1"  };
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
     std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
@@ -47,5 +48,5 @@ int main()
         tracer.run();
     }
 
-    std::cin.get();
+    //std::cin.get();
 }
