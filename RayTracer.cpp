@@ -4,7 +4,7 @@
 #include <memory>
 #include "Random.h"
 #include "YuMath.h" 
-
+#include <cmath>
 //struct Hit {
 //    std::shared_ptr<Vector3d> intersect;
 //    Geometry* hit_obj;
@@ -177,7 +177,7 @@ bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& interse
     return true;
 }
 
-Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
+Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_coor)
 {
     auto& lights = scene->GetLights();
 
@@ -197,6 +197,7 @@ Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
             if (cos_angle < 0.0f) cos_angle = 0.0f;
 
             intensity += (light->GetDiffuseIntensity() / hit_dir.norm()) * cos_angle;
+            int r = 5;
         }
         else if (light->GetType() == AREA_LIGHT)
         {
@@ -260,6 +261,48 @@ Color RayTracer::GetShading(const Vector3d& normal, const Vector3d& hit_coor)
     return intensity;
 }
 
+Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& normal, const Ray& ray)
+{
+    auto adjacent = normal * incoming.dot(normal);
+    auto opposite = incoming - adjacent;
+
+    Vector3d reflect =  adjacent - opposite ;
+    
+    Color intensity;
+
+    auto& lights = scene->GetLights();
+    
+    for (auto& light : *lights)
+    {
+        if (light->GetType() == POINT_LIGHT)
+        {
+            PointLight& point = *(PointLight*)light;
+            Vector3d towards_light = point.GetCenter() - *ray.hit_coor;
+
+            double debug_dot = (towards_light).dot(reflect);
+            double debug_mag = (towards_light.norm() * reflect.norm());
+            double cos_angle = (debug_dot / debug_mag);
+
+
+
+            if (towards_light.norm() < 2.01f) {
+                int i = 9;
+            }
+            else if (cos_angle < 0.0f) {
+                int i = 9;
+                
+                continue;
+            }
+
+
+            intensity += (light->GetSpecularIntensity()  * cos_angle) / ray.hit_coor->norm();
+           
+        }
+    }
+
+    return intensity;
+}
+
 void RayTracer::GetDiffuseColor(Ray& ray)
 {
     Color intensity;
@@ -272,7 +315,7 @@ void RayTracer::GetDiffuseColor(Ray& ray)
 
         normal = (*ray.hit_coor - sphere.GetCenter()).normalized();
 
-        intensity = GetShading(normal, *ray.hit_coor);
+        intensity = CalculateDiffuse(normal, *ray.hit_coor);
     }
 
     // Rectangle Diffuse
@@ -282,10 +325,39 @@ void RayTracer::GetDiffuseColor(Ray& ray)
 
         normal = rect.GetNormal();
 
-        intensity = GetShading(normal, *ray.hit_coor);
+        intensity = CalculateDiffuse(normal, *ray.hit_coor);
     }
 
     ray.hit_obj->intensity_diffuse = intensity;
+}
+
+void RayTracer::GetSpecularColor(Ray& ray)
+{
+    Color intensity;
+    Vector3d normal;
+
+    //Sphere diffuse
+    if (ray.hit_obj->GetType() == SPHERE)
+    {
+        Sphere& sphere = *(Sphere*)(ray.hit_obj);
+
+        normal = (*ray.hit_coor - sphere.GetCenter()).normalized();
+
+        intensity = CalculateSpecular(Vector3d(0,0,0) - (*ray.hit_coor), normal, ray);
+        int i = 3;
+    }
+
+    // Rectangle Diffuse
+    else if (ray.hit_obj->GetType() == RECTANGLE)
+    {
+        Rectangle& rect = *(Rectangle*)(ray.hit_obj);
+
+        normal = rect.GetNormal();
+
+        intensity = CalculateSpecular(Vector3d(0, 0, 0) - (*ray.hit_coor),normal, ray);
+    }
+
+    ray.hit_obj->intensity_specular = intensity;
 }
 
 void RayTracer::UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular)
@@ -385,7 +457,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular = !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
@@ -417,8 +489,10 @@ void RayTracer::Trace()
                     final_ambient = ray.hit_obj->GetAmbientColor(output->GetAmbientIntensity());
 
                     GetDiffuseColor(ray);
+                    GetSpecularColor(ray);
 
                     final_diffuse = ray.hit_obj->GetDiffuseColor();
+                    final_specular = ray.hit_obj->GetSpecularColor();
                 }
                 else
                 {
@@ -426,7 +500,7 @@ void RayTracer::Trace()
                 }
             }
 
-            output_buffer[counter] = final_ambient + final_diffuse;
+            output_buffer[counter] = final_ambient + final_diffuse + final_specular;
 
             counter++;
         }

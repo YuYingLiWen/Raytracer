@@ -29,7 +29,7 @@ public:
     inline auto GetSpecularColor() const { return sc; }
     inline Color GetAmbientColor(const Color& ai) { return ai * ac * ka; }
     inline Color GetDiffuseColor() { return dc * kd * intensity_diffuse; }
-    inline Color GetSpecularColor() { return sc * ks; }
+    inline Color GetSpecularColor() { return sc * ks * intensity_specular; }
     //inline Color GetColorMixture(const Color& ai) 
     //{ 
     //    //Color final_ambient{ ai.R() * ac.R() * ka, ai.G() * ac.G() * ka, ai.B() * ac.B() * ka };
@@ -69,6 +69,7 @@ protected:
     float pc = 0.0f; // phong coefficient
 public:
     Color intensity_diffuse;
+    Color intensity_specular;
 };
 
 #endif
