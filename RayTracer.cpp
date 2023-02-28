@@ -288,7 +288,7 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& nor
 
             double attenuation = 1.0f / std::pow(towards_light.norm(), 2.0f); // Works with test_scene1 but not others, must use a division of some sort
 
-            intensity += (light->GetSpecularIntensity() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
+            intensity += (light->GetSpecularIntensity() * std::pow(reflect.normalized().dot(towards_light.normalized()), ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
         }
     }
 
