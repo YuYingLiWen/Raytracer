@@ -197,7 +197,6 @@ Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_co
             if (cos_angle < 0.0f) cos_angle = 0.0f;
 
             intensity += (light->GetDiffuseIntensity() / hit_dir.norm()) * cos_angle;
-            int r = 5;
         }
         else if (light->GetType() == AREA_LIGHT)
         {
@@ -263,11 +262,13 @@ Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_co
 
 Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& normal, const Ray& ray)
 {
-    auto adjacent = normal * incoming.dot(normal);
-    auto opposite = incoming - adjacent;
-
-    Vector3d reflect =  adjacent - opposite ;
+    //Keep for ref
+    //auto adjacent = normal * incoming.dot(normal);
+    //auto opposite = incoming - adjacent;
+    //Vector3d reflect =  adjacent - opposite ;
     
+    Vector3d reflect = 2.0f * (normal * incoming.dot(normal)) - incoming;
+
     Color intensity;
 
     auto& lights = scene->GetLights();
@@ -279,24 +280,15 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& nor
             PointLight& point = *(PointLight*)light;
             Vector3d towards_light = point.GetCenter() - *ray.hit_coor;
 
-            double debug_dot = (towards_light).dot(reflect);
-            double debug_mag = (towards_light.norm() * reflect.norm());
-            double cos_angle = (debug_dot / debug_mag);
+            double cos_angle = towards_light.dot(reflect) / (towards_light.norm() * reflect.norm());
+            
+            if (cos_angle < 0.0f) continue;
 
+            //intensity = std::pow((reflect.dot(incoming)), ray.hit_obj->GetPhongCoeff()) * ray.hit_obj->GetSpecularCoeff();
 
+            double attenuation = 1.0f / std::pow(towards_light.norm(), 2.0f); // Works with test_scene1 but not others, must use a division of some sort
 
-            if (towards_light.norm() < 2.01f) {
-                int i = 9;
-            }
-            else if (cos_angle < 0.0f) {
-                int i = 9;
-                
-                continue;
-            }
-
-
-            intensity += (light->GetSpecularIntensity()  * cos_angle) / ray.hit_coor->norm();
-           
+            intensity += (light->GetSpecularIntensity() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
         }
     }
 
@@ -344,7 +336,6 @@ void RayTracer::GetSpecularColor(Ray& ray)
         normal = (*ray.hit_coor - sphere.GetCenter()).normalized();
 
         intensity = CalculateSpecular(Vector3d(0,0,0) - (*ray.hit_coor), normal, ray);
-        int i = 3;
     }
 
     // Rectangle Diffuse

@@ -13,12 +13,31 @@ public:
     /// @brief Default black
     Color() : _r(0.0f), _g(0.0f), _b(0.0f) {}
 
+
+
+    // Expect values in 0.0f to 1.0f format
+    Color(Vector3d value)
+    {
+        _r = value.x() < 0.0f ? 0.0f : value.x() > 1.0f ? 1.0f : value.x();
+        _g = value.y() < 0.0f ? 0.0f : value.y() > 1.0f ? 1.0f : value.y();
+        _b = value.z() < 0.0f ? 0.0f : value.z() > 1.0f ? 1.0f : value.z();
+    }
+
     // Expect values in 0.0f to 1.0f format
     Color(float r, float g, float b)
     {
         _r = r < 0.0f ? 0.0f : r > 1.0f ? 1.0f : r;
         _g = g < 0.0f ? 0.0f : g > 1.0f ? 1.0f : g;
         _b = b < 0.0f ? 0.0f : b > 1.0f ? 1.0f : b;
+    }
+
+    Color(float val)
+    {
+        val= val < 0.0f ? 0.0f : val > 1.0f ? 1.0f : val;
+
+        _r =val ;
+        _g =val ;
+        _b =val ;
     }
 
     ~Color() {}

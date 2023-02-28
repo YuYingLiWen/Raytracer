@@ -27,6 +27,8 @@ public:
     inline auto GetAmbientColor() const { return ac; }
     inline auto GetDiffuseColor() const { return dc; }
     inline auto GetSpecularColor() const { return sc; }
+    inline auto GetSpecularCoeff() const { return ks; }
+
     inline Color GetAmbientColor(const Color& ai) { return ai * ac * ka; }
     inline Color GetDiffuseColor() { return dc * kd * intensity_diffuse; }
     inline Color GetSpecularColor() { return sc * ks * intensity_specular; }
