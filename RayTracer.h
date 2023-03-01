@@ -19,6 +19,7 @@ extern void JSONReadOutput(Output* scene_output, nlohmann::json& output);
 
 
 using namespace Eigen;
+struct Hit;
 
 class RayTracer
 {
@@ -79,17 +80,17 @@ public:
     void SaveToPPM();
     
     // Saves which closest object to ray origin is hit, or nothing is hit.
-    bool Raycast(Ray& ray);
+    bool Raycast(Ray& ray, double max_distance);
 
     // Returns an array of object that ray intersected with.
-    std::vector<Geometry*> RaycastAll(const Ray& ray);
+    std::vector<Hit> RaycastAll(const Ray& ray, double max_distance);
 
-    bool IsHit(const Ray& ray, Sphere& sphere);
-    bool IsHit(const Ray& ray, Rectangle& rect);
+    //bool IsHit(const Ray& ray, Sphere& sphere);
+    //bool IsHit(const Ray& ray, Rectangle& rect);
 
     // Saves the closest hit point on the sphere to ray
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
-    bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect); 
+    bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
     // Returns integral of intensities of Color for each RGB channel
     Color CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_coor);

@@ -18,9 +18,9 @@ public:
     // Expect values in 0.0f to 1.0f format
     Color(Vector3d value)
     {
-        _r = value.x() < 0.0f ? 0.0f : value.x() > 1.0f ? 1.0f : value.x();
-        _g = value.y() < 0.0f ? 0.0f : value.y() > 1.0f ? 1.0f : value.y();
-        _b = value.z() < 0.0f ? 0.0f : value.z() > 1.0f ? 1.0f : value.z();
+        _r = (float)value.x() < 0.0f ? 0.0f : (float)value.x() > 1.0f ? 1.0f : (float)value.x();
+        _g = (float)value.y() < 0.0f ? 0.0f : (float)value.y() > 1.0f ? 1.0f : (float)value.y();
+        _b = (float)value.z() < 0.0f ? 0.0f : (float)value.z() > 1.0f ? 1.0f : (float)value.z();
     }
 
     // Expect values in 0.0f to 1.0f format
@@ -80,7 +80,7 @@ public:
 
     Color operator* (const Vector3d& other) const
     {
-        return Color(_r * other.x(), _g * other.y(), _b * other.z());
+        return Color(_r * (float)other.x(), _g * (float)other.y(), _b * (float)other.z());
     }
 
     Color operator*(double val)

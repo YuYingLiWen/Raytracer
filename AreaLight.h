@@ -5,15 +5,17 @@
 #include "Rectangle.h"
 
 #define AREA_LIGHT "area"
+#include <cmath>
+
+extern Vector3d Lerp(Vector3d, Vector3d, double);
+extern double Clamp(double val, double min, double max);
+
 
 using namespace Eigen;
 
 class AreaLight : public Light
 {
-private:
-    Rectangle rectangle;
-    bool use_center = false;
-    Eigen::Vector3d center;
+
 public:
     AreaLight() = delete;
     AreaLight(std::string type, Color id, Color is, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center)
@@ -21,7 +23,8 @@ public:
     {
         if (use_center) 
         {
-            //1 & 3 => y = ax + b
+            //diagonals
+            //1 & 3 => y = ax + b 
             //2 & 4 => y = dx + c
 
             Vector3d a = (p1 - p3); // b = 1
@@ -30,6 +33,44 @@ public:
             double x = (p2 - p1).norm() / (a - d).norm();
 
             center = a* x + p3;
+
+
+            // Hit points ~ parallele a and d
+            a = p3 - p4; 
+            d = p2 - p1;
+
+
+            x = (p2 - p4).norm() / (a - d).norm();
+
+
+            double height = a.norm();
+            double width = d.norm();
+
+            double rate = 0.1f; // 10%
+
+            double lerp1 = 0.0f;
+            while (true) 
+            {
+                Vector3d l1 = Lerp(p3, p4, lerp1);
+                Vector3d l2 = Lerp(p2, p1, lerp1);
+
+                if (lerp1 >= 1.0f) break;
+
+                lerp1 = Clamp(lerp1 + rate, 0.0f, 1.0f);
+
+                double lerp2 = 0.0f;
+
+                while(true)
+                {
+                    hits_points.push_back(Lerp(l1, l2, lerp2));
+
+                    if (lerp2 >= 1.0f) break;
+
+                    lerp2 = Clamp(lerp2 + rate, 0.0f, 1.0f);
+                }
+            }
+
+            int qwer = 0;
         }
     }
 
@@ -45,6 +86,7 @@ public:
     inline auto& GetRectangle() { return rectangle; }
     inline bool GetUseCenter() const { return use_center; }
     inline auto& GetCenter() const { return center; }
+    inline auto& GetHitPoints() const { return hits_points; }
 
 
 
@@ -57,6 +99,11 @@ public:
             << "P4: (" << al.GetP4().x() << ", " << al.GetP4().y() << ", " << al.GetP4().z() << ")\n";
         return os;
     }
+private:
+    Rectangle rectangle;
+    bool use_center = false;
+    Vector3d center;
+    std::vector<Vector3d> hits_points;
 };
 
 #endif

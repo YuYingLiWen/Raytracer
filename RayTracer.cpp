@@ -5,77 +5,85 @@
 #include "Random.h"
 #include "YuMath.h" 
 #include <cmath>
-//struct Hit {
-//    std::shared_ptr<Vector3d> intersect;
-//    Geometry* hit_obj;
-//
-//    Hit& operator=(const Hit& hit)
-//    {
-//        intersect = hit.intersect;
-//        hit_obj = hit.hit_obj;
-//
-//        return *this;
-//    }
-//};
 
-using namespace Eigen;
-
-bool RayTracer::Raycast(Ray& ray)
+struct Hit 
 {
-    auto objs = RaycastAll(ray);
+    std::shared_ptr<Vector3d> intersect;
+    Geometry* obj;
 
-    if (objs.empty()) return false;
+    Hit& operator=(const Hit& hit)
+    {
+        intersect = hit.intersect;
+        obj = hit.obj;
 
+        return *this;
+    }
+};
+
+bool RayTracer::Raycast(Ray& ray, double max_distance = DBL_MAX)
+{
+    auto hits = RaycastAll(ray, max_distance);
+
+    if (hits.empty()) return false;
+
+    bool within_range = false;
 
     // Find the nearest obj
-    for (auto& obj : objs)
+    for (auto& hit : hits)
     {
-        auto intersect = new Vector3d();
+        auto intersect = std::make_shared<Vector3d>();
 
-        if (obj->GetType() == RECTANGLE)
+        if (hit.obj->GetType() == RECTANGLE)
         {
-            IntersectCoor(ray, *((Rectangle*)obj), *intersect);
+            IntersectCoor(ray, *((Rectangle*)hit.obj), *intersect);
         }
-        else if (obj->GetType() == SPHERE)
+        else if (hit.obj->GetType() == SPHERE)
         {
-            IntersectCoor(ray, *((Sphere*)obj), *intersect);
+            IntersectCoor(ray, *((Sphere*)hit.obj), *intersect);
         }
 
-        if (ray.IsCloser(*intersect)) {
-            ray.SetClosestHit(*intersect, *obj);
+        if (ray.GetDistance(intersect) > max_distance)
+        {
+            continue;
         }
-        else {
-            delete intersect;
+        else
+        {
+            if (ray.IsCloser(intersect))
+            {
+                ray.SetClosestHit(intersect, *hit.obj);
+                within_range = true;
+            }
         }
-
     }
 
-    return true;
+    return within_range;
 }
 
 // Shoot a ray in the scene to find all objects that intersects it.
-std::vector<Geometry*> RayTracer::RaycastAll(const Ray& ray)
+std::vector<Hit> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL_MAX)
 {
     auto geometries = scene->GetGeometries();
 
     size_t size = geometries->size();
 
-    std::vector<Geometry*> hits;
+    std::vector<Hit> hits;
 
     for (Geometry* geo : *geometries) 
     {
         bool hit = false;
 
+        auto intersect = std::make_shared<Vector3d>();
+
         if (geo->GetType() == RECTANGLE)
         {
-            hit = IsHit(ray, *((Rectangle*)geo));
+            hit = IntersectCoor(ray, *((Rectangle*)geo), *intersect);
         }
         else if (geo->GetType() == SPHERE)
         {
-            hit = IsHit(ray, *((Sphere*)geo));
+            hit = IntersectCoor(ray, *((Sphere*)geo), *intersect);
         }
 
-        if (hit) hits.push_back(geo);
+        if (hit && ray.GetDistance(intersect) < max_distance) hits.push_back(Hit {intersect, geo});
     }
 
     return hits;
@@ -83,22 +91,11 @@ std::vector<Geometry*> RayTracer::RaycastAll(const Ray& ray)
 
 ///          SPHERE            ///
 
-bool RayTracer::IsHit(const Ray& ray, Sphere& sphere)
-{
-    double a, b, c;
 
-    Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
-    a = ray.GetDirection().dot(ray.GetDirection());
-    b = 2.0f * ray.GetDirection().dot(distance);
-    c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
-
-
-    //std::cout<< a << ' ' << b << ' ' << c << std::endl;
-    return !(Discriminant(a, b, c) < 0);
-}
 
 bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect)
 {
+
     double a, b, c;
 
     Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
@@ -106,16 +103,16 @@ bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersec
     b = 2.0f * ray.GetDirection().dot(distance);
     c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
 
+    if (Discriminant(a, b, c) < 0) return false; // Imaginary numbers
+    
     auto t = Quadratic(a, b, c);
-
-    if (!t) return false; // Ouputing imaginary numbers
 
     double b_pos_length = (ray.GetPoint(t->b_pos) - ray.GetOrigin()).norm();
     double b_neg_length = (ray.GetPoint(t->b_neg) - ray.GetOrigin()).norm();
 
     // Saves the closest sphere hit point.
-    if (b_pos_length < b_neg_length) intersect = ray.GetPoint(t->b_pos); // point at b_pos is closer
-    else intersect = ray.GetPoint(t->b_neg); // point at b_neg is closer
+    if (b_pos_length < b_neg_length) intersect = (ray.GetPoint(t->b_pos)); // point at b_pos is closer
+    else intersect = (ray.GetPoint(t->b_neg)); // point at b_neg is closer
 
     return true;
 }
@@ -123,20 +120,18 @@ bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersec
 
 /// RECTANGLE
 
-bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
+
+
+bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect)
 {
-    auto vn = ray.GetDirection().dot(rect.GetNormal()); 
-    
+
+    auto vn = ray.GetDirection().dot(rect.GetNormal());
+
     if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
-
-
-    // To get this formula, first find formula for intersection between a plane and a line(ray)
-    // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
-    // finally, simplify it due to the cluster of negative sign and dot product. 
-    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn; 
     
-
-    if(t == 0) return false;
+    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn;
+    
+    if (t == 0) return false;
 
     auto hit_point = ray.GetPoint(t);
 
@@ -149,35 +144,20 @@ bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
     auto area = rect.GetArea();
     auto area_delta = rect.GetArea() - sum;
 
-    auto is_in = std::abs(area_delta) < 0.05f;
+    auto is_in = std::abs(area_delta) < 0.05f; // 0.05f is for truncation errors.
 
-    return (is_in); 
-}
-
-bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect)
-{
-
-    auto vn = ray.GetDirection().dot(rect.GetNormal());
-
-    if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
-
-    //if (vn > 0.0f)
-    //{
-    //    //rect.RecalculateNormal();
-    //    vn = ray.GetDirection().dot(-rect.GetNormal());
-    //}
+    if (!is_in) return false;
 
     // To get this formula, first find formula for intersection between a plane and a line(ray)
     // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
     // finally, simplify it due to the cluster of negative sign and dot product. 
-    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn;
 
-    intersect = ray.GetPoint(t);
+    intersect = hit_point;
 
     return true;
 }
 
-Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_coor)
+Color RayTracer::CalculateDiffuse(const Vector3d& hit_normal, const Vector3d& hit_coor)
 {
     auto& lights = scene->GetLights();
 
@@ -188,15 +168,21 @@ Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_co
         if (light->GetType() == POINT_LIGHT)
         {
             PointLight& point = *(PointLight*)light;
-            Vector3d hit_dir = point.GetCenter() - hit_coor;
+            Vector3d towards_light = point.GetCenter() - hit_coor;
 
-            Ray ray(hit_coor, hit_dir);
+            Ray ray(hit_coor + hit_normal * 0.0001f, towards_light);
 
-            double cos_angle = (hit_dir).dot(normal);
+            if (RaycastAll(ray).size() > 2)
+            {
+                intensity += Color(); // Black
+                continue;
+            }
+
+            double cos_angle = (towards_light).dot(hit_normal);
 
             if (cos_angle < 0.0f) cos_angle = 0.0f;
 
-            intensity += (light->GetDiffuseIntensity() / hit_dir.norm()) * cos_angle;
+            intensity += (light->GetDiffuseIntensity() / towards_light.norm()) * cos_angle;
         }
         else if (light->GetType() == AREA_LIGHT)
         {
@@ -204,13 +190,22 @@ Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_co
 
             if (area.GetUseCenter()) 
             {
-                Vector3d hit_dir = area.GetCenter() - hit_coor;
+                Vector3d towards_light = area.GetCenter() - hit_coor;
 
-                double cos_angle = (hit_dir).dot(normal);
+                double cos_angle = (towards_light).dot(hit_normal);
+
+                Ray ray(hit_coor , towards_light);
+
+                //if (Raycast(ray, towards_light.norm()))
+                //{
+                //    intensity += (light->GetDiffuseIntensity() / towards_light.norm()) * cos_angle *0.5f; // Black
+                //    continue;
+                //}
+
 
                 if (cos_angle < 0.0f) cos_angle = 0.0f;
 
-                intensity += (light->GetDiffuseIntensity() / hit_dir.norm()) * cos_angle;
+                intensity += (light->GetDiffuseIntensity() / towards_light.norm()) * cos_angle;
             }
             else 
             {
@@ -225,9 +220,6 @@ Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_co
                 Ray ray3(hit_coor, area.GetP3() - hit_coor);
                 Ray ray4(hit_coor, area.GetP4() - hit_coor);
 
-                if (IsHit(ray1, area.GetRectangle())) {
-
-                }
 
                 /*if (!Raycast(ray1) || !Raycast(ray2) || !Raycast(ray3) || !Raycast(ray4))
                 {
@@ -235,10 +227,10 @@ Color RayTracer::CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_co
                 }*/
 
 
-                double cos_angle1 = (hit_dir1).dot(normal);
-                double cos_angle2 = (hit_dir2).dot(normal);
-                double cos_angle3 = (hit_dir3).dot(normal);
-                double cos_angle4 = (hit_dir4).dot(normal);
+                double cos_angle1 = (hit_dir1).dot(hit_normal);
+                double cos_angle2 = (hit_dir2).dot(hit_normal);
+                double cos_angle3 = (hit_dir3).dot(hit_normal);
+                double cos_angle4 = (hit_dir4).dot(hit_normal);
 
 
                 if (cos_angle1 < 0.0f) cos_angle1 = 0.0f;
@@ -526,3 +518,56 @@ void RayTracer::SaveToPPM()
 
     DEBUG_LOG("Done saving!");
 }
+
+
+
+
+/// Sphere 
+
+//bool RayTracer::IsHit(const Ray& ray, Sphere& sphere)
+//{
+//    double a, b, c;
+//
+//    Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
+//    a = ray.GetDirection().dot(ray.GetDirection());
+//    b = 2.0f * ray.GetDirection().dot(distance);
+//    c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
+//
+//
+//    //std::cout<< a << ' ' << b << ' ' << c << std::endl;
+//    return !(Discriminant(a, b, c) < 0);
+//}
+
+
+// rectangle
+
+//bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
+//{
+//    auto vn = ray.GetDirection().dot(rect.GetNormal()); 
+//    
+//    if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
+//
+//
+//    // To get this formula, first find formula for intersection between a plane and a line(ray)
+//    // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
+//    // finally, simplify it due to the cluster of negative sign and dot product. 
+//    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn; 
+//    
+//
+//    if(t == 0) return false;
+//
+//    auto hit_point = ray.GetPoint(t);
+//
+//    long double area1 = HeronTriangle(hit_point, rect.GetP1(), rect.GetP2());
+//    long double area2 = HeronTriangle(hit_point, rect.GetP2(), rect.GetP3());
+//    long double area3 = HeronTriangle(hit_point, rect.GetP3(), rect.GetP4());
+//    long double area4 = HeronTriangle(hit_point, rect.GetP4(), rect.GetP1());
+//
+//    auto sum = (area1 + area2 + area3 + area4);
+//    auto area = rect.GetArea();
+//    auto area_delta = rect.GetArea() - sum;
+//
+//    auto is_in = std::abs(area_delta) < 0.05f;
+//
+//    return (is_in); 
+//}

@@ -59,5 +59,15 @@ double HeronTriangle(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const
 	return std::sqrt(s * (s - a) *(s - b) * (s-c));
 }
 
+
+Vector3d Lerp(Vector3d from, Vector3d to, double t)
+{
+	return (1.0f - t) * from + t * to;
+}
+
+double Clamp(double val, double min, double max)
+{
+	return (val < min) ? min : (val > max) ? max : val;
+}
 #endif
 

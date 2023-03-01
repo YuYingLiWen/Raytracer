@@ -7,7 +7,7 @@ class Random
 public:
 	Random() 
 	{
-		std::srand(std::time(nullptr)); // seeds the RNG
+		std::srand((unsigned int)std::time(nullptr)); // seeds the RNG
 	}
 
 	double Generate(double num) 
