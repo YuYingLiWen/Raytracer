@@ -93,8 +93,10 @@ public:
     bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
     // Returns integral of intensities of Color for each RGB channel
-    Color CalculateDiffuse(const Vector3d& normal, const Vector3d& hit_coor);
+    Color CalculateDiffuse(const Vector3d& normal, const Ray& ray);
     Color CalculateSpecular(const Vector3d& incoming, const Vector3d& normal, const Ray& ray);
+
+    Color CalculatePointLightDiffuse(const Vector3d& normal, const Vector3d& center, const Color& diffuse_intensity, const Ray& ray);
 
     void GetDiffuseColor(Ray& ray);
     void GetSpecularColor(Ray& ray);

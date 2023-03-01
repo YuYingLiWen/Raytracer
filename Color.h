@@ -83,17 +83,17 @@ public:
         return Color(_r * (float)other.x(), _g * (float)other.y(), _b * (float)other.z());
     }
 
-    Color operator*(double val)
+    Color operator*(double val) const
     {
         return Color(_r * (float)val, _g * (float)val, _b * (float)val);
     }
 
-    Color operator/(double val)
+    Color operator/(double val) const
     {
         return Color(_r / (float)val, _g / (float)val, _b / (float)val);
     }
 
-    Color operator/(Eigen::Vector3d val)
+    Color operator/(Eigen::Vector3d val) const
     {
         return Color(_r / (float)val.x(), _g / (float)val.y(), _b / (float)val.z());
     }
