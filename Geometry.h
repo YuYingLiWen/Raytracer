@@ -32,13 +32,6 @@ public:
     inline Color GetAmbientColor(const Color& ai) { return ai * ac * ka; }
     inline Color GetDiffuseColor() { return dc * kd * intensity_diffuse; }
     inline Color GetSpecularColor() { return sc * ks * intensity_specular; }
-    //inline Color GetColorMixture(const Color& ai) 
-    //{ 
-    //    //Color final_ambient{ ai.R() * ac.R() * ka, ai.G() * ac.G() * ka, ai.B() * ac.B() * ka };
-    //    Color final_ambient = (ac * ai) * ka;
-    //    Color final_diffuse = dc * intensity_diffuse * kd;
-    //    return final_ambient + final_diffuse;
-    //}
 
     virtual std::string ToString() const
     {

@@ -83,7 +83,7 @@ public:
     bool Raycast(Ray& ray, double max_distance);
 
     // Returns an array of object that ray intersected with.
-    std::vector<Hit> RaycastAll(const Ray& ray, double max_distance);
+    std::shared_ptr<std::vector<Hit>> RaycastAll(const Ray& ray, double max_distance);
 
     //bool IsHit(const Ray& ray, Sphere& sphere);
     //bool IsHit(const Ray& ray, Rectangle& rect);

@@ -21,7 +21,7 @@ public:
     AreaLight(std::string type, Color id, Color is, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center)
         : Light(type, id, is), rectangle(p1,p2,p3,p4), use_center(use_center)
     {
-        if (use_center) 
+        if (use_center)
         {
             //diagonals
             //1 & 3 => y = ax + b 
@@ -29,27 +29,28 @@ public:
 
             Vector3d a = (p1 - p3); // b = 1
             Vector3d d = (p2 - p4); // c = 2
-            
+
             double x = (p2 - p1).norm() / (a - d).norm();
 
-            center = a* x + p3;
-
-
+            center = a * x + p3;
+        }
+        else // Use the full light
+        {
             // Hit points ~ parallele a and d
-            a = p3 - p4; 
-            d = p2 - p1;
+            Vector3d a = p3 - p4;
+            Vector3d d = p2 - p1;
 
 
-            x = (p2 - p4).norm() / (a - d).norm();
+            double x = (p2 - p4).norm() / (a - d).norm();
 
 
             double height = a.norm();
             double width = d.norm();
 
-            double rate = 0.1f; // 10%
+            double rate = 0.2f; // 10%
 
             double lerp1 = 0.0f;
-            while (true) 
+            while (true)
             {
                 Vector3d l1 = Lerp(p3, p4, lerp1);
                 Vector3d l2 = Lerp(p2, p1, lerp1);
@@ -60,7 +61,7 @@ public:
 
                 double lerp2 = 0.0f;
 
-                while(true)
+                while (true)
                 {
                     hits_points.push_back(Lerp(l1, l2, lerp2));
 
@@ -69,8 +70,6 @@ public:
                     lerp2 = Clamp(lerp2 + rate, 0.0f, 1.0f);
                 }
             }
-
-            int qwer = 0;
         }
     }
 
@@ -86,7 +85,7 @@ public:
     inline auto& GetRectangle() { return rectangle; }
     inline bool GetUseCenter() const { return use_center; }
     inline auto& GetCenter() const { return center; }
-    inline auto& GetHitPoints() const { return hits_points; }
+    inline auto& GetHitPoints() { return hits_points; }
 
 
 

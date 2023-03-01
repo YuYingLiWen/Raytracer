@@ -8,12 +8,12 @@
 
 struct Hit 
 {
-    std::shared_ptr<Vector3d> intersect;
+    std::shared_ptr<Vector3d> point;
     Geometry* obj;
 
     Hit& operator=(const Hit& hit)
     {
-        intersect = hit.intersect;
+        point = hit.point;
         obj = hit.obj;
 
         return *this;
@@ -24,14 +24,14 @@ bool RayTracer::Raycast(Ray& ray, double max_distance = DBL_MAX)
 {
     auto hits = RaycastAll(ray, max_distance);
 
-    if (hits.empty()) return false;
+    if (hits->empty()) return false;
 
     // Find the nearest obj
-    for (auto& hit : hits)
+    for (auto& hit : *hits)
     {
-        if (ray.IsCloser(hit.intersect))
+        if (ray.IsCloser(hit.point))
         {
-            ray.SetClosestHit(hit.intersect, *hit.obj);
+            ray.SetClosestHit(hit.point, *hit.obj);
         }
     }
 
@@ -39,13 +39,13 @@ bool RayTracer::Raycast(Ray& ray, double max_distance = DBL_MAX)
 }
 
 // Shoot a ray in the scene to find all objects that intersects it.
-std::vector<Hit> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL_MAX)
+std::shared_ptr<std::vector<Hit>> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL_MAX)
 {
     auto geometries = scene->GetGeometries();
 
     size_t size = geometries->size();
 
-    std::vector<Hit> hits;
+    auto hits = std::make_shared<std::vector<Hit>>();
 
     for (Geometry* geo : *geometries) 
     {
@@ -64,11 +64,7 @@ std::vector<Hit> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL
 
         if (hit && ray.GetDistance(intersect) < max_distance)
         {
-            if (ray.hit_obj != nullptr) 
-            {
-                if (ray.hit_obj == geo)  continue;
-            }
-            hits.push_back(Hit{ intersect, geo });
+            hits->push_back(Hit{ intersect, geo });
         }
     }
 
@@ -164,7 +160,20 @@ Color RayTracer::CalculateDiffuse(const Vector3d& hit_normal, const Ray& ray)
             }
             else 
             {
-                // Use the full rectangle
+                auto& hit_points = area.GetHitPoints();
+
+                double r = 0, g = 0, b = 0;
+
+                for (Vector3d& point: hit_points)
+                {
+                    Color c = CalculatePointLightDiffuse(hit_normal, point, light->GetDiffuseIntensity(), ray);
+
+                    r += c.R();
+                    g += c.G();
+                    b += c.B();
+                }
+
+                intensity += Color(r / hit_points.size(), g / hit_points.size(), b/ hit_points.size());
             }
         }
 
@@ -208,19 +217,38 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& nor
     return intensity;
 }
 
-Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Vector3d& center, const Color& diffuse_intensity, const Ray& ray)
+Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Vector3d& light_center, const Color& diffuse_intensity, const Ray& ray)
 {
-    Vector3d towards_light = center - *ray.hit_coor;
-    Ray new_ray(center, towards_light);
+    Vector3d towards_light = light_center - *ray.hit_coor;
+    Ray new_ray(light_center + hit_normal * 0.00001f, towards_light);
+
+    double distance_to_light = towards_light.norm();
+
+    auto hits = RaycastAll(new_ray, distance_to_light);
+    std::vector<Hit> filtered_hits;
+
+    // Filter out objects that are embedded in lights
+    for (Hit& hit: *hits) 
+    {
+        double amount = std::abs((*hit.point - light_center).norm() - distance_to_light);
+        double amount2 = std::abs((*hit.point - *ray.hit_coor).norm());
+        
+        if (amount < 0.01f && amount2 < 1.0f)
+        {
+            continue;
+        }
+
+        filtered_hits.push_back(hit);
+    }
+
+
+
+    if (hits->size() > 0) // (hits.size() > 0)
+    {
+        return Color::Black();
+    }
 
     double cos_angle = (towards_light).dot(hit_normal);
-
-    int count = RaycastAll(new_ray, towards_light.norm()).size();
-
-    if (count > 1) // because the light is embeded inside the wall
-    {
-        return (diffuse_intensity / towards_light.norm()) * cos_angle * 0.5f; // Black
-    }
 
     if (cos_angle < 0.0f) cos_angle = 0.0f;
 
@@ -384,7 +412,7 @@ void RayTracer::Trace()
     uint32_t counter = 0;
 
     bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
-    bool use_specular = !output->HasGlobalIllumination(); // If scene has GL then no specular light
+    bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
     for (uint32_t y = 0; y < camera.Height(); y++)
@@ -405,7 +433,6 @@ void RayTracer::Trace()
             }
             else 
             {
-
                 Vector3d pixel_shoot_at = camera.OriginLookAt() + px + py;
                 
                 Ray ray = camera.MakeRay(pixel_shoot_at);

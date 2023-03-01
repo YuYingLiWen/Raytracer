@@ -10,7 +10,8 @@ struct Color
 private:
     float _r, _g, _b;
 public:
-    /// @brief Default black
+
+    ///Default black
     Color() : _r(0.0f), _g(0.0f), _b(0.0f) {}
 
 
@@ -41,6 +42,13 @@ public:
     }
 
     ~Color() {}
+
+    static Color Black() { return Color(); }
+    static Color Red() { return Color(1, 0, 0); }
+    static Color Green() { return Color(0, 1, 0); }
+    static Color Blue() { return Color(0, 0, 1); }
+    static Color White() { return Color(1, 1, 1); }
+
 
     Color(const Color& other)
     {
