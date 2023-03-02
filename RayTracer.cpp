@@ -212,28 +212,33 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& hit
 
             intensity += (light->GetSpecularIntensity() * std::pow(reflect.normalized().dot(towards_light.normalized()), ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
         }
-        //else if (light->GetType() == AREA_LIGHT)
-        //{
-        //    AreaLight& area = *(AreaLight*)light;
+        else if (light->GetType() == AREA_LIGHT)
+        {
+            AreaLight& area = *(AreaLight*)light;
 
-        //    auto& hit_points = area.GetHitPoints();
+            auto& hit_points = area.GetHitPoints();
 
-        //    for (Vector3d& point : hit_points)
-        //    {
+            double specularity = 0.0f;
+            double attenuation = 0.0f;
 
-        //        Vector3d towards_light = point - *ray.hit_coor;
+            for (Vector3d& point : hit_points)
+            {
 
-        //        double cos_angle = towards_light.dot(reflect) / (towards_light.norm() * reflect.norm());
+                Vector3d towards_light = point - *ray.hit_coor;
 
-        //        if (cos_angle < 0.0f) continue;
+                double cos_angle = towards_light.dot(reflect) / (towards_light.norm() * reflect.norm());
 
-        //        //intensity = std::pow((reflect.dot(incoming)), ray.hit_obj->GetPhongCoeff()) * ray.hit_obj->GetSpecularCoeff();
+                if (cos_angle < 0.0f) continue;
 
-        //        double attenuation = 1.0f / std::pow(towards_light.norm(), 2.0f); // Works with test_scene1 but not others, must use a division of some sort
+                //intensity = std::pow((reflect.dot(incoming)), ray.hit_obj->GetPhongCoeff()) * ray.hit_obj->GetSpecularCoeff();
 
-        //        intensity += (light->GetSpecularIntensity() * std::pow(reflect.normalized().dot(towards_light.normalized()), ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
-        //    }
-        //}
+                attenuation += (1.0f / std::pow(towards_light.norm(), 2.0f)); // Works with test_scene1 but not others, must use a division of some sort
+
+                specularity += reflect.normalized().dot(towards_light.normalized());
+
+            }
+            intensity += (light->GetSpecularIntensity() * std::pow((specularity / hit_points.size()), ray.hit_obj->GetPhongCoeff() * attenuation)); // TODO: The Phong coeff behaves weird compared to reference images.
+        }
     }
 
     return intensity;
