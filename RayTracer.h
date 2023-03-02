@@ -10,8 +10,14 @@
 #include <cstdio>
 #include <iostream>
 
+#define PRINT(x) std::cout << ">> " << x << std::endl
 
-#define DEBUG_LOG(x) std::cout << ">> " << x << std::endl
+#if _DEBUG
+#define DEBUG_LOG(x) PRINT(x)
+#else
+#define DEBUG_LOG(x) //x
+#endif
+
 
 extern void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geometries);
 extern void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights);
@@ -32,7 +38,7 @@ public:
     RayTracer(nlohmann::json json_file)
         :json_file(json_file)
     {
-        DEBUG_LOG("JSON file acquired!");
+        PRINT("JSON file acquired!");
     }
 
     ~RayTracer() 
@@ -56,7 +62,7 @@ public:
     /// Builds scene from json file
     void BuildScene()
     {
-        DEBUG_LOG("Building scene...");
+        PRINT("Building scene...");
 
         scene = new Scene();
 

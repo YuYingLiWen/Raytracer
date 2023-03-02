@@ -161,19 +161,19 @@ Color RayTracer::CalculateDiffuse(const Vector3d& hit_normal, const Ray& ray)
             else 
             {
                 auto& hit_points = area.GetHitPoints();
-
+            
                 double r = 0, g = 0, b = 0;
-
+            
                 for (Vector3d& point: hit_points)
                 {
                     Color c = CalculatePointLightDiffuse(hit_normal, point, light->GetDiffuseIntensity(), ray);
-
+            
                     r += c.R();
                     g += c.G();
                     b += c.B();
                 }
-
-                intensity += Color(r / hit_points.size(), g / hit_points.size(), b/ hit_points.size());
+            
+                intensity += Color(r / (double)hit_points.size(), g / (double)hit_points.size(), b/ (double)hit_points.size());
             }
         }
 
@@ -182,14 +182,14 @@ Color RayTracer::CalculateDiffuse(const Vector3d& hit_normal, const Ray& ray)
     return intensity;
 }
 
-Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& normal, const Ray& ray)
+Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& hit_normal, const Ray& ray)
 {
     //Keep for ref
     //auto adjacent = normal * incoming.dot(normal);
     //auto opposite = incoming - adjacent;
     //Vector3d reflect =  adjacent - opposite ;
     
-    Vector3d reflect = 2.0f * (normal * incoming.dot(normal)) - incoming;
+    Vector3d reflect = 2.0f * (hit_normal * incoming.dot(hit_normal)) - incoming;
 
     Color intensity;
 
@@ -212,6 +212,28 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& nor
 
             intensity += (light->GetSpecularIntensity() * std::pow(reflect.normalized().dot(towards_light.normalized()), ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
         }
+        //else if (light->GetType() == AREA_LIGHT)
+        //{
+        //    AreaLight& area = *(AreaLight*)light;
+
+        //    auto& hit_points = area.GetHitPoints();
+
+        //    for (Vector3d& point : hit_points)
+        //    {
+
+        //        Vector3d towards_light = point - *ray.hit_coor;
+
+        //        double cos_angle = towards_light.dot(reflect) / (towards_light.norm() * reflect.norm());
+
+        //        if (cos_angle < 0.0f) continue;
+
+        //        //intensity = std::pow((reflect.dot(incoming)), ray.hit_obj->GetPhongCoeff()) * ray.hit_obj->GetSpecularCoeff();
+
+        //        double attenuation = 1.0f / std::pow(towards_light.norm(), 2.0f); // Works with test_scene1 but not others, must use a division of some sort
+
+        //        intensity += (light->GetSpecularIntensity() * std::pow(reflect.normalized().dot(towards_light.normalized()), ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
+        //    }
+        //}
     }
 
     return intensity;
@@ -220,33 +242,35 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& nor
 Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Vector3d& light_center, const Color& diffuse_intensity, const Ray& ray)
 {
     Vector3d towards_light = light_center - *ray.hit_coor;
-    Ray new_ray(light_center + hit_normal * 0.00001f, towards_light);
+    Ray new_ray(*ray.hit_coor, towards_light);
 
-    double distance_to_light = towards_light.norm();
-
-    auto hits = RaycastAll(new_ray, distance_to_light);
+    double towards_light_distance = towards_light.norm();
+    auto hits = RaycastAll(new_ray, towards_light_distance);
     std::vector<Hit> filtered_hits;
+
+    //DEBUG_LOG("New Batch");
 
     // Filter out objects that are embedded in lights
     for (Hit& hit: *hits) 
     {
-        double amount = std::abs((*hit.point - light_center).norm() - distance_to_light);
-        double amount2 = std::abs((*hit.point - *ray.hit_coor).norm());
-        
-        if (amount < 0.01f && amount2 < 1.0f)
+        //DEBUG_LOG(hit.obj->GetName());
+
+        double to_light_dist = (*hit.point - light_center).norm();
+        double to_hit_coor_dist = (*hit.point - *ray.hit_coor).norm();
+
+        //DEBUG_LOG("To Light Distance: " << to_light_dist);
+        //DEBUG_LOG("To Hit Coor Distance: " << to_hit_coor_dist);
+
+        if (to_light_dist > 0.001f 
+            && to_hit_coor_dist > 0.001f 
+            && to_light_dist <= towards_light_distance)
         {
-            continue;
+            //DEBUG_LOG("Taken: " << hit.obj->GetName());
+            filtered_hits.push_back(hit);
         }
-
-        filtered_hits.push_back(hit);
     }
 
-
-
-    if (hits->size() > 0) // (hits.size() > 0)
-    {
-        return Color::Black();
-    }
+    if (filtered_hits.size() > 0) return Color::Black();
 
     double cos_angle = (towards_light).dot(hit_normal);
 
@@ -474,7 +498,7 @@ void RayTracer::SaveToPPM()
     This code has been adapted once again by me.
     */
 
-    DEBUG_LOG("Saving output as " + scene->GetOuput()->GetFileName() + ".");
+    PRINT("Saving output as " + scene->GetOuput()->GetFileName() + ".");
 
     std::ofstream ofs(".\\outputs\\" + scene->GetOuput()->GetFileName(), std::ios_base::out | std::ios_base::binary);
     ofs << "P6" << std::endl << scene->GetOuput()->GetSize().x() << ' ' << scene->GetOuput()->GetSize().y() << std::endl << "255" << std::endl;
@@ -489,58 +513,5 @@ void RayTracer::SaveToPPM()
 
     ofs.close();
 
-    DEBUG_LOG("Done saving!");
+    PRINT("Done saving!");
 }
-
-
-
-
-/// Sphere 
-
-//bool RayTracer::IsHit(const Ray& ray, Sphere& sphere)
-//{
-//    double a, b, c;
-//
-//    Vector3d distance = ray.GetOrigin() - sphere.GetCenter();
-//    a = ray.GetDirection().dot(ray.GetDirection());
-//    b = 2.0f * ray.GetDirection().dot(distance);
-//    c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
-//
-//
-//    //std::cout<< a << ' ' << b << ' ' << c << std::endl;
-//    return !(Discriminant(a, b, c) < 0);
-//}
-
-
-// rectangle
-
-//bool RayTracer::IsHit(const Ray& ray, Rectangle& rect)
-//{
-//    auto vn = ray.GetDirection().dot(rect.GetNormal()); 
-//    
-//    if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
-//
-//
-//    // To get this formula, first find formula for intersection between a plane and a line(ray)
-//    // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
-//    // finally, simplify it due to the cluster of negative sign and dot product. 
-//    auto t = (rect.GetP1() - ray.GetOrigin()).dot(rect.GetNormal()) / vn; 
-//    
-//
-//    if(t == 0) return false;
-//
-//    auto hit_point = ray.GetPoint(t);
-//
-//    long double area1 = HeronTriangle(hit_point, rect.GetP1(), rect.GetP2());
-//    long double area2 = HeronTriangle(hit_point, rect.GetP2(), rect.GetP3());
-//    long double area3 = HeronTriangle(hit_point, rect.GetP3(), rect.GetP4());
-//    long double area4 = HeronTriangle(hit_point, rect.GetP4(), rect.GetP1());
-//
-//    auto sum = (area1 + area2 + area3 + area4);
-//    auto area = rect.GetArea();
-//    auto area_delta = rect.GetArea() - sum;
-//
-//    auto is_in = std::abs(area_delta) < 0.05f;
-//
-//    return (is_in); 
-//}

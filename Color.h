@@ -48,6 +48,7 @@ public:
     static Color Green() { return Color(0, 1, 0); }
     static Color Blue() { return Color(0, 0, 1); }
     static Color White() { return Color(1, 1, 1); }
+    static Color Magenta() { return Color(1, 0, 1); }
 
 
     Color(const Color& other)
@@ -71,6 +72,13 @@ public:
     float G() const { return _g; }
     float B() const { return _b; }
     
+    bool operator== (const Color& other)
+    {
+        return 
+            (_r == other.R()) &&
+            (_g == other.G()) &&
+            (_b == other.B());
+    }
     
     Color& operator*= (const Color& other)
     {
