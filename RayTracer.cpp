@@ -237,7 +237,7 @@ Color RayTracer::CalculateSpecular(const Vector3d& incoming, const Vector3d& hit
                 specularity += reflect.normalized().dot(towards_light.normalized());
 
             }
-            intensity += (light->GetSpecularIntensity() * std::pow((specularity / hit_points.size()), ray.hit_obj->GetPhongCoeff() * attenuation)); // TODO: The Phong coeff behaves weird compared to reference images.
+            intensity += (light->GetSpecularIntensity() * std::pow((specularity / hit_points.size()), ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
         }
     }
 
