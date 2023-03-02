@@ -47,7 +47,7 @@ public:
             double height = a.norm();
             double width = d.norm();
 
-            double rate = 0.2f; // 10%
+            double rate = 0.1f; // 10%
 
             double lerp1 = 0.0f;
             while (true)

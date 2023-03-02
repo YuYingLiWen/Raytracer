@@ -100,7 +100,7 @@ public:
 
     // Returns integral of intensities of Color for each RGB channel
     Color CalculateDiffuse(const Vector3d& normal, const Ray& ray);
-    Color CalculateSpecular(const Vector3d& incoming, const Vector3d& normal, const Ray& ray);
+    Color CalculateSpecular(const Vector3d& normal, const Ray& ray);
 
     Color CalculatePointLightDiffuse(const Vector3d& normal, const Vector3d& center, const Color& diffuse_intensity, const Ray& ray);
 
