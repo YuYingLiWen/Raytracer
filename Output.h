@@ -79,6 +79,8 @@ public:
 
     // Might need modification due to info from assignment docs
     inline auto GetRaysPerPixel() { return rays_per_pixel; }
+    inline auto GetMaxRayBounce() { return max_bounce != nullptr ? max_bounce : 0; }
+
     inline uint16_t GetRaySampleSize() { return rays_per_pixel != nullptr ? rays_per_pixel->x(): 1; }
     inline uint16_t GetGridSize() { return rays_per_pixel != nullptr ? rays_per_pixel->y() : 1; }
 

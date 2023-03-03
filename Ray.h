@@ -22,14 +22,14 @@ public:
     };
 
 
-    inline Vector3d GetOrigin() const { return origin; }
+    Vector3d GetOrigin() const { return origin; }
     
-    inline Vector3d GetDirection() const {
+    Vector3d GetDirection() const {
         return direction; 
     }
 
     // If hit nothing distance == INIFINITY
-    inline double GetHitDistance() const 
+    double GetHitDistance() const 
     { 
         if (!hit_coor) return INFINITY;
 
@@ -37,14 +37,14 @@ public:
     }
 
     // From origin of this ray to a point
-    inline double GetDistance(const std::shared_ptr<Vector3d> point) const 
+    double GetDistance(const std::shared_ptr<Vector3d> point) const 
     { 
         if (point == nullptr) return DBL_MAX;
         return (*point - origin).norm(); 
     }
 
     
-    inline Vector3d GetPoint(double distance) const { return distance * direction + origin; }
+    Vector3d GetPoint(double& distance) const { return distance * direction + origin; }
 
     bool IsCloser(std::shared_ptr<Vector3d> point)
     {

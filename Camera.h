@@ -34,6 +34,7 @@ public:
 		sample_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->y() : 1;
 
 		ambient_intensity = output.GetAmbientIntensity();
+		max_bounce = (uint8_t)output.max_bounce;
 	}
 
 	~Camera()
@@ -90,6 +91,7 @@ private:
 
 	Color ambient_intensity;
 	std::vector<Color>* ppm_buffer = nullptr;
+	uint8_t max_bounce;
 };
 
 #endif // !CAMERA_H

@@ -55,7 +55,7 @@ public:
     inline const auto& GetP4() const { return p4; }
 
     inline double GetArea() const { return area; }
-    inline auto& GetNormal() const { return normal; }
+    auto& GetNormal() const { return normal; }
 
     std::string ToString() const override
     {

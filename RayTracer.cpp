@@ -290,7 +290,7 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Ve
     Geometry& geo = *ray.hit_obj;
 
     //Vector3d light_direction = -towards_light;
-    //double dot = light_direction.dot(hit_normal);
+    //double dot = light_direction.normalized().dot(hit_normal);
     //if (dot < 0.0f)  return geo.GetAmbientColor(); // Checks which side is faced towards the light
 
     double towards_light_distance = towards_light.norm();
@@ -404,7 +404,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = true;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
