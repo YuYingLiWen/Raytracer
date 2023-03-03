@@ -36,7 +36,6 @@ public:
 
     ~Output() 
     { 
-        delete ppm_buffer;
         delete global_illum;
         delete rays_per_pixel;
         delete max_bounce;
@@ -83,13 +82,6 @@ public:
     inline uint16_t GetRaySampleSize() { return rays_per_pixel != nullptr ? rays_per_pixel->x(): 1; }
     inline uint16_t GetGridSize() { return rays_per_pixel != nullptr ? rays_per_pixel->y() : 1; }
 
-    std::vector<Color>& GetBuffer() 
-    {
-        if (!ppm_buffer) ppm_buffer = new std::vector<Color>((size_t)size.x() * (size_t)size.y());
-
-        return *ppm_buffer; 
-    }
-    
     friend std::ostream& operator << (std::ostream& os, const Output& out)
     {
         os << "File name: " << out.GetFileName() << '\n'
@@ -125,7 +117,6 @@ private:
     unsigned int* max_bounce = nullptr;
     double* probe_terminate = nullptr; //?? wats this thing??
     bool contains_area_light = false;
-    std::vector<Color>* ppm_buffer = nullptr;
 };
 
 #endif

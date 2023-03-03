@@ -33,17 +33,20 @@ private:
     nlohmann::json json_file;
 
     Scene* scene = nullptr;
-
+    Camera* camera = nullptr;
 public:
     RayTracer(nlohmann::json json_file)
         :json_file(json_file)
     {
         PRINT("JSON file acquired!");
+
+        
     }
 
     ~RayTracer() 
     {
         delete scene;
+        delete camera;
     }
 
     /// Main function that starts the tracer.
@@ -55,6 +58,7 @@ public:
         // Save to file or wtv
 
         BuildScene();
+        SetupCamera();
         Trace();
         SaveToPPM();
     }
@@ -80,6 +84,13 @@ public:
         //        scene->PrintOutput();
         //#endif
     }
+
+    void SetupCamera() 
+    { 
+        PRINT("Setting the camera...");
+        camera = new Camera(*scene->GetOuput(), 0.1f); 
+    }
+
     /// Starts tracing the scene
     void Trace();
     /// Save current scene data as .ppm file.
@@ -90,9 +101,6 @@ public:
 
     // Returns an array of object that ray intersected with.
     std::shared_ptr<std::vector<Hit>> RaycastAll(const Ray& ray, double max_distance);
-
-    //bool IsHit(const Ray& ray, Sphere& sphere);
-    //bool IsHit(const Ray& ray, Rectangle& rect);
 
     // Saves the closest hit point on the sphere to ray
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
@@ -109,7 +117,7 @@ public:
 
     void GetAmbientColor(Ray& ray);
 
-    void UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular);
+    void UseMSAA(Camera& camera, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular);
 };
 
 

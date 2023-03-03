@@ -15,25 +15,42 @@ class Camera
 public:
 	Camera() = delete;
 
-	Camera(const Output& output) 
+	Camera(const Output& output, float resolution_factor = 1.0f) 
 	{
 		fov = output.fov;
 		look_at = output.look_at;
 		up = output.up;
 		origin = output.center;
 		right = up.cross(look_at);
-		height = output.size.y();
-		width = output.size.x();
+		height = output.size.y() * resolution_factor;
+		width = output.size.x() * resolution_factor;
 		aspect_ratio = (double)width / (double)height;
 		origin_lookat = origin + look_at;
 
 		half_image = std::tan(Deg2Rad * fov * 0.5f);
 		pixel_center = half_image / height;
+
+		grid_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->x() : 1;
+		sample_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->y() : 1;
+
+		ambient_intensity = output.GetAmbientIntensity();
+	}
+
+	~Camera()
+	{
+		delete ppm_buffer;
 	}
 
 	Ray MakeRay(Vector3d& destination) const 
 	{
 		return Ray(origin, destination - origin);
+	}
+
+	std::vector<Color>& GetOutputBuffer()
+	{
+		if (!ppm_buffer) ppm_buffer = new std::vector<Color>((size_t)width * (size_t)height);
+
+		return *ppm_buffer;
 	}
 
 	auto Height() const { return height; }
@@ -49,7 +66,10 @@ public:
 	auto HalfImage() const { return half_image; }
 
 	auto ScaledPixel() const { return half_image * aspect_ratio; }
-
+	
+	auto GridSize() const { return grid_size; }
+	auto SampleSize() const { return sample_size; }
+	auto AmbientIntensity() const { return ambient_intensity; }
 
 private:
 	double fov;
@@ -64,6 +84,12 @@ private:
 	Vector3d up;
 	Vector3d right;
 	Vector3d origin_lookat;
+
+	uint16_t grid_size;
+	uint16_t sample_size;
+
+	Color ambient_intensity;
+	std::vector<Color>* ppm_buffer = nullptr;
 };
 
 #endif // !CAMERA_H

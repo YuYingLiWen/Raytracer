@@ -332,18 +332,14 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Ve
 
 /// OTHERS
 
-void RayTracer::UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular)
+void RayTracer::UseMSAA(Camera& camera, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular)
 {
-    const double grid_size = output.GetGridSize();
-    const double sample_size = output.GetRaySampleSize();
+    const double grid_size = camera.GridSize();
+    const double sample_size = camera.SampleSize();
+    const Color ai = camera.AmbientIntensity();
 
     const double subpixel_center = camera.PixelCenter() / grid_size;
     const double total_samples = grid_size * grid_size * sample_size;
-
-    std::vector<Color> ambient_color_samples;
-    std::vector<Color> diffuse_color_samples;
-    std::vector<Color> specular_color_samples;
-
 
     //Scanline for each row -> column
     for (uint16_t grid_y = 0; grid_y < grid_size; grid_y++)
@@ -361,57 +357,28 @@ void RayTracer::UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& 
                 if (Raycast(ray))
                 {
                     GetAmbientColor(ray);
-                    ambient_color_samples.push_back(ray.ambient * output.GetAmbientIntensity());
+                    out_final_ambient += ray.ambient * ai;
 
-                    if (sample == 0)
-                    {
-                        GetDiffuseColor(ray);
 
-                        diffuse_color_samples.push_back(ray.hit_obj->GetDiffuseColor());
-                    }
+                    GetSpecularColor(ray);
+                    out_final_specular += ray.specular;
+
+
+                    GetDiffuseColor(ray);
+                    out_final_diffuse += ray.diffuse;
                 }
                 else
                 {
-                    ambient_color_samples.push_back(scene->GetOuput()->GetBgColor());
+                    out_final_ambient += scene->GetOuput()->GetBgColor();
                 }
             }
         }
     }
 
-    //Ambient
-    double ar = 0.0f, ab = 0.0f, ag = 0.0f;
-
-    for (Color& sample : ambient_color_samples)
-    {
-        ar += sample.r;
-        ab += sample.g;
-        ag += sample.b;
-    }
-
-    //Diffuse
-    double dr = 0.0f, db = 0.0f, dg = 0.0f;
-
-    for (Color& sample : diffuse_color_samples)
-    {
-        dr += sample.r;
-        db += sample.g;
-        dg += sample.b;
-    }
-
-    //Specular
-    double sr = 0.0f, sb = 0.0f, sg = 0.0f;
-
-    for (Color& sample : diffuse_color_samples)
-    {
-        sr += sample.r;
-        sb += sample.g;
-        sg += sample.b;
-    }
-
     //Final Colors
-    out_final_ambient = Color((float)(ar / total_samples), (float)(ag / total_samples), (float)(ab / total_samples));
-    out_final_diffuse = Color((float)(dr / total_samples), (float)(dg / total_samples), (float)(db / total_samples));
-    out_final_specular = Color((float)(sr / total_samples), (float)(sg / total_samples), (float)(sb / total_samples));
+    out_final_ambient /= total_samples;
+    out_final_diffuse /= total_samples;
+    out_final_specular /= total_samples;
 }
 
 void RayTracer::GetAmbientColor(Ray& ray)
@@ -422,16 +389,14 @@ void RayTracer::GetAmbientColor(Ray& ray)
 
 void RayTracer::Trace()
 {
-    DEBUG_LOG("Tracing...");
+    PRINT("Tracing...");
 
     Random rng;
 
     // Caching lots to precomputed data before casting rays.
     auto& output = scene->GetOuput();
 
-    Camera camera(*output);
-
-    auto& output_buffer = output->GetBuffer();
+    auto& output_buffer = camera->GetOutputBuffer();
 
     size_t buffer_size = output_buffer.size();
 
@@ -439,36 +404,37 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = true;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
-    for (uint32_t y = 0; y < camera.Height(); y++)
+    for (uint32_t y = 0; y < camera->Height(); y++)
     {
         //std::cout << std::endl;
-        for (uint32_t x = 0; x < camera.Width() ; x++)
+        for (uint32_t x = 0; x < camera->Width() ; x++)
         {
             Color final_ambient;
             Color final_diffuse;
             Color final_specular;
 
-            px = (camera.ScaledPixel() - (2.0f * x + 1.0f) * camera.PixelCenter()) * camera.Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-            py = (camera.HalfImage() - (2.0f * y + 1.0f) * camera.PixelCenter()) * camera.Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            px = (camera->ScaledPixel() - (2.0f * x + 1.0f) * camera->PixelCenter()) * camera->Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            py = (camera->HalfImage() - (2.0f * y + 1.0f) * camera->PixelCenter()) * camera->Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
 
             if (use_AA)
             {
-                UseMSAA(camera, *output, px, py, final_ambient, final_diffuse, final_specular);
+                UseMSAA(*camera, px, py, final_ambient, final_diffuse, final_specular, use_specular);
+
             }
             else 
             {
-                Vector3d pixel_shoot_at = camera.OriginLookAt() + px + py;
+                Vector3d pixel_shoot_at = camera->OriginLookAt() + px + py;
                 
-                Ray ray = camera.MakeRay(pixel_shoot_at);
+                Ray ray = camera->MakeRay(pixel_shoot_at);
 
                 if (Raycast(ray))
                 {
                     GetAmbientColor(ray);
-                    final_ambient = ray.ambient * output->GetAmbientIntensity();
+                    final_ambient = ray.ambient * camera->AmbientIntensity();
 
                     GetDiffuseColor(ray);
                     final_diffuse = ray.diffuse;
@@ -506,9 +472,9 @@ void RayTracer::SaveToPPM()
     PRINT("Saving output as " + scene->GetOuput()->GetFileName() + ".");
 
     std::ofstream ofs(".\\outputs\\" + scene->GetOuput()->GetFileName(), std::ios_base::out | std::ios_base::binary);
-    ofs << "P6" << std::endl << scene->GetOuput()->GetSize().x() << ' ' << scene->GetOuput()->GetSize().y() << std::endl << "255" << std::endl;
+    ofs << "P6" << std::endl << camera->Width() << ' ' << camera->Height() << std::endl << "255" << std::endl;
 
-    auto& buffer = scene->GetOuput()->GetBuffer();
+    auto& buffer = camera->GetOutputBuffer();
     size_t size = buffer.size();
 
     for (uint32_t i = 0; i < size; i++) {
