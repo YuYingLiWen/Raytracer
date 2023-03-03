@@ -67,6 +67,11 @@ private:
 public:
     Geometry* hit_obj = nullptr;
     std::shared_ptr<Vector3d> hit_coor = nullptr;
+    
+public:
+    Color diffuse;
+    Color specular;
+    Color ambient;
 };
 
 

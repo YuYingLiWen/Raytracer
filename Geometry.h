@@ -23,15 +23,13 @@ public:
 
     inline const auto& GetType() const { return type; }
     inline const auto& GetName() const { return name; }
-    inline float GetPhongCoeff() const { return pc; }
-    inline auto GetAmbientColor() const { return ac; }
-    inline auto GetDiffuseColor() const { return dc; }
-    inline auto GetSpecularColor() const { return sc; }
-    inline auto GetSpecularCoeff() const { return ks; }
-
-    inline Color GetAmbientColor(const Color& ai) { return ai * ac * ka; }
-    inline Color GetDiffuseColor() { return dc * kd * intensity_diffuse; }
-    inline Color GetSpecularColor() { return sc * ks * intensity_specular; }
+    inline float GetPhongCoeff()  { return pc; }
+    inline auto GetAmbientColor() { return ac; }
+    inline auto GetDiffuseColor()  { return dc; }
+    inline auto GetSpecularColor()  { return sc; }
+    inline auto GetSpecularCoeff()  { return ks; }
+    inline auto GetDiffuseCoeff() { return kd; }
+    inline auto GetAmbientCoeff() { return ka; }
 
     virtual std::string ToString() const
     {
@@ -39,10 +37,10 @@ public:
                "\nAmbient Coeff: " + std::to_string(ka) +
                "\nDiffuse Coeff: " + std::to_string(kd) +
                "\nSpecular Coeff: " + std::to_string(ks) +
-               "\nPhong Coeff: " + std::to_string(GetPhongCoeff()) +
-               "\nAmbient Color " + GetAmbientColor().ToString() +
-               "\nDiffuse Color " + GetDiffuseColor().ToString() +
-               "\nSpecular Color " + GetSpecularColor().ToString() +'\n';
+               "\nPhong Coeff: " + std::to_string(pc) +
+               "\nAmbient Color " + ac.ToString() +
+               "\nDiffuse Color " + dc.ToString() +
+               "\nSpecular Color " + sc.ToString() +'\n';
     }
 
     friend std::ostream& operator <<(std::ostream& os, const Geometry& geo)
@@ -62,9 +60,6 @@ protected:
     float ks = 0.0f; // Specular coeff
 
     float pc = 0.0f; // phong coefficient
-public:
-    Color intensity_diffuse;
-    Color intensity_specular;
 };
 
 #endif

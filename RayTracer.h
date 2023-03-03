@@ -99,14 +99,15 @@ public:
     bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
     // Returns integral of intensities of Color for each RGB channel
-    Color CalculateDiffuse(const Vector3d& normal, const Ray& ray);
-    Color CalculateSpecular(const Vector3d& normal, const Ray& ray);
+    void CalculateDiffuse(const Vector3d& normal,  Ray& ray);
+    void CalculateSpecular(const Vector3d& normal, Ray& ray);
 
-    Color CalculatePointLightDiffuse(const Vector3d& normal, const Vector3d& center, const Color& diffuse_intensity, const Ray& ray);
+    Color CalculatePointLightDiffuse(const Vector3d& normal, const Vector3d& center, const Color& diffuse_intensity,  Ray& ray);
 
     void GetDiffuseColor(Ray& ray);
     void GetSpecularColor(Ray& ray);
 
+    void GetAmbientColor(Ray& ray);
 
     void UseMSAA(Camera& camera, Output& output, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular);
 };
