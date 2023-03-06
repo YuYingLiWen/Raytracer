@@ -4,11 +4,10 @@
 #include "Output.h"
 #include "Ray.h"
 #include "Eigen/Core"
+#include "YuMath.h"
 
 using namespace Eigen;
 
-#define PI 3.14159265359f
-#define Deg2Rad (PI / 180.0f)
 
 class Camera 
 {
@@ -35,6 +34,8 @@ public:
 
 		ambient_intensity = output.GetAmbientIntensity();
 		max_bounce = (uint8_t)output.max_bounce;
+
+		ppm_buffer = new std::vector<Color>((size_t)width * (size_t)height);
 	}
 
 	~Camera()
@@ -47,12 +48,7 @@ public:
 		return Ray(origin, destination - origin);
 	}
 
-	std::vector<Color>& GetOutputBuffer()
-	{
-		if (!ppm_buffer) ppm_buffer = new std::vector<Color>((size_t)width * (size_t)height);
-
-		return *ppm_buffer;
-	}
+	std::vector<Color>& GetOutputBuffer() { return *ppm_buffer; }
 
 	auto Height() const { return height; }
 	auto Width() const { return width; }

@@ -88,7 +88,7 @@ public:
     void SetupCamera() 
     { 
         PRINT("Setting the camera...");
-        camera = new Camera(*scene->GetOuput(), 0.1f); 
+        camera = new Camera(*scene->GetOuput(), 1.0f); 
     }
 
     /// Starts tracing the scene
