@@ -62,6 +62,8 @@ public:
     inline const auto& GetFileName() const { return file_name; }
     inline const auto& GetSize() const { return size; }
 
+
+    inline const auto& GetAmbientIntensity() const { return ai; }
     inline const auto& GetBgColor() const { return bkc; }
 
     inline bool HasGlobalIllumination() 
@@ -71,11 +73,16 @@ public:
         return false;
     }
     
-    inline auto GetGlobalIllum() const { return global_illum; }
-    inline auto GetProbeTerminate() const { return probe_terminate; } //?? wats this thing??
+    inline auto GetGlobalIllum() { return global_illum; }
+    inline auto GetMaxBounce() { return max_bounce; }
+    inline auto GetProbeTerminate() { return probe_terminate; } //?? wats this thing??
 
     // Might need modification due to info from assignment docs
-    inline auto GetRaysPerPixel() const { return rays_per_pixel; }
+    inline auto GetRaysPerPixel() { return rays_per_pixel; }
+    inline auto GetMaxRayBounce() { return max_bounce != nullptr ? max_bounce : 0; }
+
+    inline uint16_t GetRaySampleSize() { return rays_per_pixel != nullptr ? rays_per_pixel->x(): 1; }
+    inline uint16_t GetGridSize() { return rays_per_pixel != nullptr ? rays_per_pixel->y() : 1; }
 
     friend std::ostream& operator << (std::ostream& os, const Output& out)
     {
@@ -85,8 +92,8 @@ public:
             << "Look At: [" << out.look_at.x() << "," << out.look_at.y() << "," << out.look_at.z() << "]\n"
             << "Center: [" << out.center.x() << "," << out.center.y() << "," << out.center.z() << "]\n"
             << "FOV: " << out.fov << '\n'
-            << "Ambient Intensity: " << out.ai << '\n'
-            << "Background Color: " << out.bkc << '\n'
+            << "Ambient Intensity: " << out.GetAmbientIntensity() << '\n'
+            << "Background Color: " << out.GetBgColor() << '\n'
             << "Global Illumination: " << (((out.global_illum == nullptr) ? "N/A" : (*out.global_illum == 1) ? "True" : "False")) << '\n'
             << "Rays per pixels: (" << ((out.rays_per_pixel == nullptr) ? "N/A" :
                 (std::to_string(out.rays_per_pixel->x()) + ", " + std::to_string(out.rays_per_pixel->y()) + ")")) << '\n'
