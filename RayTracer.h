@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <mutex>
 
 #define PRINT(x) std::cout << ">> " << x << std::endl
 
@@ -27,6 +28,10 @@ extern void JSONReadOutput(Output* scene_output, nlohmann::json& output);
 using namespace Eigen;
 struct Hit;
 
+
+
+
+
 class RayTracer
 {
 private:
@@ -34,6 +39,9 @@ private:
 
     Scene* scene = nullptr;
     Camera* camera = nullptr;
+
+    std::mutex counter_lock;
+    uint32_t counter = 0;
 public:
     RayTracer(nlohmann::json json_file)
         :json_file(json_file)
@@ -46,7 +54,6 @@ public:
     ~RayTracer() 
     {
         delete scene;
-        delete camera;
     }
 
     /// Main function that starts the tracer.
@@ -88,7 +95,8 @@ public:
     void SetupCamera() 
     { 
         PRINT("Setting the camera...");
-        camera = new Camera(*scene->GetOuput(), 0.1f); 
+        camera = Camera::GetInstance();
+        camera->SetData(*scene->GetOuput(), 1.0f);
     }
 
     /// Starts tracing the scene
@@ -96,6 +104,14 @@ public:
     /// Save current scene data as .ppm file.
     void SaveToPPM();
     
+
+    void IncrementCounter()
+    {
+        counter_lock.lock();
+        counter++;
+        counter_lock.unlock();
+    }
+
     // Saves which closest object to ray origin is hit, or nothing is hit.
     bool Raycast(Ray& ray, double max_distance);
 
@@ -110,7 +126,7 @@ public:
     void CalculateDiffuse(const Vector3d& normal,  Ray& ray);
     void CalculateSpecular(const Vector3d& normal, Ray& ray);
 
-    Color CalculatePointLightDiffuse(const Vector3d& normal, const Vector3d& center, const Color& diffuse_intensity,  Ray& ray);
+    void CalculatePointLightDiffuse(const Vector3d normal, Vector3d center, Color diffuse_intensity,  Ray ray, uint16_t bounce_count, Color& diffuse_color);
 
     void GetDiffuseColor(Ray& ray);
     void GetSpecularColor(Ray& ray);

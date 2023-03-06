@@ -130,9 +130,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="JSONReader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="RayTracer.cpp" />
+    <ClCompile Include="SimpleThread.h" />
+    <ClCompile Include="YuMath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Eigen\Cholesky" />
