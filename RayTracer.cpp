@@ -183,18 +183,19 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
             PointLight& point = *(PointLight*)light;
 
             Vector3d towards_light = point.GetCenter() - *ray.hit_coor;
+            
+            //Phong
+            //Vector3d reflect = Reflect(hit_normal, towards_light);
+            //double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
 
-            Vector3d reflect = Reflect(hit_normal, towards_light);
-
-            double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
+            //Blinn-Phong
+            Vector3d half_vector = (towards_light + towards_camera).normalized();
+            double cos_angle = hit_normal.dot(half_vector);
             
             if (cos_angle < 0.0f) continue;
 
-            double distance = std::pow(cos_angle, ray.hit_obj->GetPhongCoeff());
-            double distance2 = towards_light.norm();
 
-
-            specular += ( light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
+            specular += ( light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff()));
         }
         else if (light->GetType() == AREA_LIGHT)
         {
@@ -202,20 +203,26 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
 
             auto& hit_points = area.GetHitPoints();
 
+            Color spec;
+
             for (Vector3d& point : hit_points)
             {
                 Vector3d towards_light = point - *ray.hit_coor;
 
-                Vector3d reflect = Reflect(hit_normal, towards_light);
-
-                double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
+                //Phong
+                //Vector3d reflect = Reflect(hit_normal, towards_light);
+                //double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
+                
+                //Blinn-Phong
+                Vector3d half_vector = (towards_light + towards_camera).normalized();
+                double cos_angle = hit_normal.dot(half_vector);
 
                 if (cos_angle < 0.0f) continue;
 
-                specular += (light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
+                spec += (light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff()));
             }
 
-            specular /= hit_points.size();
+            specular = spec / hit_points.size();
         }
     }
 
