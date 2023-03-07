@@ -168,7 +168,9 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
     //auto opposite = incoming - adjacent;
     //Vector3d reflect =  adjacent - opposite ;
 
-    Vector3d towards_camera = Vector3d(0,0,0) - *ray.hit_coor;
+    Camera* cam = Camera::GetInstance();
+
+    Vector3d towards_camera = cam->Position() - *ray.hit_coor;
     Color specular;
 
 
@@ -192,7 +194,7 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
             double distance2 = towards_light.norm();
 
 
-            specular += (light->GetSpecularIntensity() * ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
+            specular += ( light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
         }
         else if (light->GetType() == AREA_LIGHT)
         {
@@ -210,7 +212,7 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
 
                 if (cos_angle < 0.0f) continue;
 
-                specular += (light->GetSpecularIntensity() * ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
+                specular += (light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff())); // TODO: The Phong coeff behaves weird compared to reference images.
             }
 
             specular /= hit_points.size();
@@ -397,6 +399,8 @@ void RayTracer::Trace()
 
     Random rng;
 
+    Camera* camera = Camera::GetInstance();
+
     // Caching lots to precomputed data before casting rays.
     auto& output = scene->GetOuput();
 
@@ -464,14 +468,8 @@ void RayTracer::Trace()
 
 void RayTracer::SaveToPPM()
 {
-    /*
-    # Old Comment
-    This code was adapted from here:
-    https://rosettacode.org/wiki/Bitmap/Write_a_PPM_file#C.2B.2B
-
-    # New Comment
-    This code has been adapted once again by me.
-    */
+    
+    Camera* camera = Camera::GetInstance();
 
     PRINT("Saving output as " + scene->GetOuput()->GetFileName() + ".");
 

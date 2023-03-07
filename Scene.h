@@ -10,7 +10,6 @@
 #include "AreaLight.h"
 #include "PointLight.h"
 #include "Output.h"
-#include "Camera.h"
 class Scene
 {
 private: 

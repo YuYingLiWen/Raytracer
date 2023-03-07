@@ -6,6 +6,7 @@
 
 #include "Scene.h"
 #include "Ray.h"
+#include "Camera.h"
 
 #include <cstdio>
 #include <iostream>
@@ -33,7 +34,6 @@ private:
     nlohmann::json json_file;
 
     Scene* scene = nullptr;
-    Camera* camera = nullptr;
 public:
     RayTracer(nlohmann::json json_file)
         :json_file(json_file)
@@ -46,7 +46,6 @@ public:
     ~RayTracer() 
     {
         delete scene;
-        delete camera;
     }
 
     /// Main function that starts the tracer.
@@ -88,7 +87,9 @@ public:
     void SetupCamera() 
     { 
         PRINT("Setting the camera...");
-        camera = new Camera(*scene->GetOuput(), 1.0f); 
+
+        Camera* camera = Camera::GetInstance();
+        camera->SetData(*scene->GetOuput(), 1.0f);
     }
 
     /// Starts tracing the scene
