@@ -189,9 +189,9 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
             //double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
 
             //Blinn-Phong
-            Vector3d half_vector = (towards_light + towards_camera).normalized();
+            Vector3d half_vector = (towards_light.normalized() + towards_camera.normalized()).normalized();
             double cos_angle = hit_normal.dot(half_vector);
-            
+
             if (cos_angle < 0.0f) continue;
 
 
@@ -214,7 +214,7 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
                 //double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
                 
                 //Blinn-Phong
-                Vector3d half_vector = (towards_light + towards_camera).normalized();
+                Vector3d half_vector = (towards_light.normalized() + towards_camera.normalized()).normalized();
                 double cos_angle = hit_normal.dot(half_vector);
 
                 if (cos_angle < 0.0f) continue;
