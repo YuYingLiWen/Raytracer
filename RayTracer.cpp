@@ -5,6 +5,7 @@
 #include "Random.h"
 #include "YuMath.h" 
 #include <cmath>
+#include <cfloat>
 
 struct Hit 
 {

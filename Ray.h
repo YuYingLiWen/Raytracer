@@ -5,6 +5,7 @@
 #include "Eigen/Dense"
 
 #include "Geometry.h"
+#include <cfloat>
 
 using namespace Eigen;
 class Ray
