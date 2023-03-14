@@ -22,7 +22,7 @@ struct OutputData
 
     bool* global_illum = nullptr;
     Eigen::Vector2i* rays_per_pixel = nullptr;
-    unsigned int* max_bounce = nullptr;
+    uint8_t* max_bounce = nullptr;
     double* probe_terminate = nullptr; //?? wats this thing??
 };
 
@@ -116,7 +116,7 @@ private:
 
     bool* global_illum = nullptr;
     Eigen::Vector2i* rays_per_pixel = nullptr;
-    unsigned int* max_bounce = nullptr;
+    uint8_t* max_bounce = nullptr;
     double* probe_terminate = nullptr; //?? wats this thing??
     bool contains_area_light = false;
 };

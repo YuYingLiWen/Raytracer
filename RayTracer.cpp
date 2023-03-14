@@ -223,7 +223,7 @@ void RayTracer::CalculateSpecular(const Vector3d& hit_normal, Ray& ray)
                 spec += (light->GetSpecularIntensity() *  ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff()));
             }
 
-            specular = spec / hit_points.size();
+            specular = spec / (double)hit_points.size();
         }
     }
 

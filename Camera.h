@@ -47,7 +47,7 @@ public:
 	double PixelCenter() const;			
 	double HalfImage() const;				
 	uint8_t MaxBounce() const;				
-	float ProbeTerminate() const;		
+	double ProbeTerminate() const;		
 private:
 
 	static Camera* instance;
@@ -71,7 +71,7 @@ private:
 
 	Color ambient_intensity;
 	uint8_t max_bounce{};
-	float probe_terminate{};
+	double probe_terminate{};
 
 	std::vector<Color>* ppm_buffer = nullptr;
 };

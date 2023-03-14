@@ -19,8 +19,6 @@ void Camera::SetData(const Output& output, float resolution_factor = 1.0f)
 	up = output.up;
 	position = output.center;
 	right = up.cross(look_at);
-	height = output.size.y() * resolution_factor;
-	width = output.size.x() * resolution_factor;
 	height = (uint16_t)(output.size.y() * resolution_factor);
 	width = (uint16_t)(output.size.x() * resolution_factor);
 	aspect_ratio = (double)width / (double)height;
@@ -32,10 +30,7 @@ void Camera::SetData(const Output& output, float resolution_factor = 1.0f)
 	grid_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->x() : 1;
 	sample_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->y() : 1;
 
-
 	scaled_pixel = half_image * aspect_ratio;
-	ambient_intensity = output.GetAmbientIntensity();
-	max_bounce = (uint8_t)output.max_bounce;
 	ambient_intensity = output.ai;
 	max_bounce = output.max_bounce != nullptr ? *output.max_bounce : 0;
 	probe_terminate = output.probe_terminate != nullptr ? *output.probe_terminate : 0.0f;
@@ -74,4 +69,4 @@ Color Camera::AmbientIntensity() const { return ambient_intensity; }
 double Camera::PixelCenter() const { return pixel_center; }
 double Camera::HalfImage() const { return half_image; }
 uint8_t Camera::MaxBounce() const { return max_bounce; }
-float Camera::ProbeTerminate() const { return probe_terminate; }
+double Camera::ProbeTerminate() const { return probe_terminate; }

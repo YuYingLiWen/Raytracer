@@ -150,7 +150,7 @@ void JSONReadOutput(Output* scene_output, nlohmann::json& output)
 
     if (JSONGetValue(value, "globalillum") != nullptr) data.global_illum = new bool(JSONGetValue(value, "globalillum"));
     if (JSONGetValue(value, "probterminate") != nullptr) data.probe_terminate = new double(JSONGetValue(value, "probterminate"));
-    if (JSONGetValue(value, "maxbounces") != nullptr) data.max_bounce = new unsigned int(JSONGetValue(value, "maxbounces"));
+    if (JSONGetValue(value, "maxbounces") != nullptr) data.max_bounce = new uint8_t(JSONGetValue(value, "maxbounces"));
     if (JSONGetValue(value, "raysperpixel") != nullptr)
     {
         auto val_ray_per_pixel = JSONGetValue(value, "raysperpixel");
