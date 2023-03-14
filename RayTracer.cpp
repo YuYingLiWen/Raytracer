@@ -303,10 +303,6 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Ve
 
     Geometry& geo = *ray.hit_obj;
 
-    //Vector3d light_direction = -towards_light;
-    //double dot = light_direction.normalized().dot(hit_normal);
-    //if (dot < 0.0f)  return geo.GetAmbientColor(); // Checks which side is faced towards the light
-
     double towards_light_distance = towards_light.norm();
     auto hits = RaycastAll(new_ray, towards_light_distance);
     std::vector<Hit> filtered_hits;
