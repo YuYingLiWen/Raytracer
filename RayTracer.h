@@ -89,7 +89,7 @@ public:
         PRINT("Setting the camera...");
 
         Camera* camera = Camera::GetInstance();
-        camera->SetData(*scene->GetOuput(), 1.0f);
+        camera->SetData(*scene->GetOuput(), 0.5f);
     }
 
     /// Starts tracing the scene
@@ -118,7 +118,7 @@ public:
 
     void GetAmbientColor(Ray& ray);
 
-    void UseMSAA(Camera& camera, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular);
+    void UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular);
 };
 
 

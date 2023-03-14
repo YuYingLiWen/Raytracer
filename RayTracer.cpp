@@ -346,13 +346,15 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& hit_normal, const Ve
 
 /// OTHERS
 
-void RayTracer::UseMSAA(Camera& camera, Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular)
+void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular)
 {
-    const double grid_size = camera.GridSize();
-    const double sample_size = camera.SampleSize();
-    const Color ai = camera.AmbientIntensity();
 
-    const double subpixel_center = camera.PixelCenter() / grid_size;
+    Camera* camera = Camera::GetInstance();
+    const double grid_size = camera->GridSize();
+    const double sample_size = camera->SampleSize();
+    const Color ai = camera->AmbientIntensity();
+
+    const double subpixel_center = camera->PixelCenter() / grid_size;
     const double total_samples = grid_size * grid_size * sample_size;
 
     //Scanline for each row -> column
@@ -360,23 +362,24 @@ void RayTracer::UseMSAA(Camera& camera, Vector3d& px, Vector3d& py, Color& out_f
     {
         for (uint16_t grid_x = 0; grid_x < grid_size; grid_x++) // Samples area color around the current pixel
         {
-            Vector3d sub_px = px + (camera.PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center) * camera.Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-            Vector3d sub_py = py + (camera.PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * camera.Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-            Vector3d subpixel_shoot_at = camera.OriginLookAt() + sub_px + sub_py;
+            Vector3d sub_px = px + (camera->PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center) * camera->Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            Vector3d sub_py = py + (camera->PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * camera->Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            Vector3d subpixel_shoot_at = camera->OriginLookAt() + sub_px + sub_py;
 
             for (uint16_t sample = 0; sample < sample_size; sample++) // Samples area color around the current pixel
             {
-                Ray ray = camera.MakeRay(subpixel_shoot_at);
+                Ray ray = camera->MakeRay(subpixel_shoot_at);
 
                 if (Raycast(ray))
                 {
                     GetAmbientColor(ray);
                     out_final_ambient += ray.ambient * ai;
 
-
-                    GetSpecularColor(ray);
-                    out_final_specular += ray.specular;
-
+                    if (use_specular)
+                    {
+                        GetSpecularColor(ray);
+                        out_final_specular += ray.specular;
+                    }
 
                     GetDiffuseColor(ray);
                     out_final_diffuse += ray.diffuse;
@@ -420,7 +423,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = false;// !(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = true; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
@@ -436,18 +439,17 @@ void RayTracer::Trace()
             px = (camera->ScaledPixel() - (2.0f * x + 1.0f) * camera->PixelCenter()) * camera->Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
             py = (camera->HalfImage() - (2.0f * y + 1.0f) * camera->PixelCenter()) * camera->Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
 
-            if (use_AA)
-            {
-                UseMSAA(*camera, px, py, final_ambient, final_diffuse, final_specular, use_specular);
+            Vector3d pixel_shoot_at = camera->OriginLookAt() + px + py;
 
-            }
-            else 
-            {
-                Vector3d pixel_shoot_at = camera->OriginLookAt() + px + py;
-                
-                Ray ray = camera->MakeRay(pixel_shoot_at);
+            Ray ray = camera->MakeRay(pixel_shoot_at);
 
-                if (Raycast(ray))
+            if (Raycast(ray))
+            {
+                if (use_AA)
+                {
+                    UseMSAA(px, py, final_ambient, final_diffuse, final_specular, use_specular);
+                }
+                else // No AA
                 {
                     GetAmbientColor(ray);
                     final_ambient = ray.ambient * camera->AmbientIntensity();
@@ -455,16 +457,16 @@ void RayTracer::Trace()
                     GetDiffuseColor(ray);
                     final_diffuse = ray.diffuse;
 
-                    if (use_specular) 
+                    if (use_specular)
                     {
                         GetSpecularColor(ray);
                         final_specular = ray.specular;
                     }
                 }
-                else
-                {
-                    final_ambient = scene->GetOuput()->GetBgColor();
-                }
+            }
+            else
+            {
+                final_ambient = scene->GetOuput()->GetBgColor();
             }
 
             output_buffer[counter] = (final_ambient + final_diffuse + final_specular).Clamp();
