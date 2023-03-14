@@ -1,4 +1,4 @@
-#include "external/json.hpp"
+#include "external/json.hpp" //#include "../external/json.hpp"
 
 #include "AreaLight.h"
 #include "PointLight.h"
