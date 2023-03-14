@@ -2,7 +2,7 @@
 #ifndef RAYTRACER_H
 #define RAYTRACER_H
 
-#include "external/json.hpp"
+#include "external/json.hpp" //#include "../external/json.hpp"
 
 #include "Scene.h"
 #include "Ray.h"

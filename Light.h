@@ -3,9 +3,6 @@
 
 #include <string>
 #include "Color.h"
-#include "Eigen/Core"
-
-using namespace Eigen;
 
 class Light
 {

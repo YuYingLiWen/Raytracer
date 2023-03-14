@@ -17,12 +17,12 @@ int main()
     //std::string files[] = { "test_scene1" };
     //std::string files[] = { "test_area_light1" };
     //std::string files[] = { "test_scene1B" };
-    //std::string files[] = { "test_scene3B" };
+    std::string files[] = { "test_scene3B" };
 
     //std::string files[] = { "test_scene1B","test_scene1"  };
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
-    std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
+    //std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
     //std::string files[] = { "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
 
     //std::string files[] = {"test_scene2"};
@@ -34,7 +34,7 @@ int main()
     {
         std::cout << "==== " << scene_name << " ====" << std::endl;
 
-        std::ifstream t(scene_name + ".json");
+        std::ifstream t("scenes\\" + scene_name + ".json");
         if (!t) {
             std::cout << "File " << scene_name << " does not exist!" << std::endl;
             return -1;
