@@ -39,8 +39,6 @@ public:
         :json_file(json_file)
     {
         PRINT("JSON file acquired!");
-
-        
     }
 
     ~RayTracer() 
@@ -107,18 +105,16 @@ public:
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
     bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
-    // Returns integral of intensities of Color for each RGB channel
-    void CalculateDiffuse(const Vector3d& normal,  Ray& ray);
-    void CalculateSpecular(const Vector3d& normal, Ray& ray);
+    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity,  Ray& ray);
 
-    Color CalculatePointLightDiffuse(const Vector3d& normal, const Vector3d& center, const Color& diffuse_intensity,  Ray& ray);
-
-    void GetDiffuseColor(Ray& ray);
-    void GetSpecularColor(Ray& ray);
+    Color GetDiffuseColor(Ray& ray);
+    Color GetSpecularColor(Ray& ray);
 
     void GetAmbientColor(Ray& ray);
 
     void UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular);
+
+    Vector3d GetNormal(const Ray& ray);
 };
 
 

@@ -13,7 +13,7 @@ class Ray
 {
 public:
 
-    Ray() = delete;
+    Ray() {};
     Ray(Vector3d origin, Vector3d direction)
         :origin(origin), direction(direction)
     {
@@ -22,6 +22,8 @@ public:
     ~Ray() {
 
     };
+
+    //Ray& operator=(const )
 
 
     Vector3d GetOrigin() const { return origin; }
@@ -62,15 +64,15 @@ public:
         this->hit_obj = &hit_obj;
     }
 
-private:
-    Vector3d origin;
-    Vector3d direction;
-
 public:
     Geometry* hit_obj = nullptr;
     std::shared_ptr<Vector3d> hit_coor = nullptr;
     
 public:
+    Vector3d origin;
+    Vector3d direction;
+
+
     Color diffuse;
     Color specular;
     Color ambient;

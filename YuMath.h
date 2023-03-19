@@ -38,5 +38,8 @@ double Clamp(double val, double min, double max);
 
 Vector3d Reflect(const Vector3d& normal, const Vector3d& inverse);
 
+Vector3d ReflectRand(const Vector3d& normal, const Vector3d& inverse, const float rand_num);
+
+
 #endif
 

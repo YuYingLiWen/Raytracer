@@ -10,6 +10,11 @@ public:
 		std::srand((unsigned int)std::time(nullptr)); // seeds the RNG
 	}
 
+	double Generate()
+	{
+		return (float)rand() / (float)RAND_MAX;
+	}
+
 	double Generate(double num) 
 	{ 
 		double result = ((float)rand() / (float)RAND_MAX) * num * 2.0f - num;

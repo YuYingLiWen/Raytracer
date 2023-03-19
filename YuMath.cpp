@@ -60,3 +60,10 @@ Vector3d Reflect(const Vector3d& normal, const Vector3d& inverse)
 	// inverse as in the inverse vector that hits the base of the normal vector
 	return 2.0f * (normal * inverse.dot(normal)) - inverse;
 }
+
+Vector3d ReflectRand(const Vector3d& normal, const Vector3d& inverse, const float rand_num)
+{
+	//Note that rand_num needs to be between 
+	// inverse as in the inverse vector that hits the base of the normal vector
+	return 2.0f * (normal * inverse.dot(normal) * rand_num) - inverse;
+}
