@@ -81,9 +81,9 @@ bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersec
     b = 2.0f * ray.GetDirection().dot(distance);
     c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
 
-    if (Discriminant(a, b, c) < 0) return false; // Imaginary numbers
+    if (YuMath::Discriminant(a, b, c) < 0) return false; // Imaginary numbers
     
-    auto t = Quadratic(a, b, c);
+    auto t = YuMath::Quadratic(a, b, c);
 
     double b_pos_length = (ray.GetPoint(t->b_pos) - ray.GetOrigin()).norm();
     double b_neg_length = (ray.GetPoint(t->b_neg) - ray.GetOrigin()).norm();
@@ -113,18 +113,15 @@ bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& interse
 
     auto hit_point = ray.GetPoint(t);
 
-    long double area1 = HeronTriangle(hit_point, rect.GetP1(), rect.GetP2());
-    long double area2 = HeronTriangle(hit_point, rect.GetP2(), rect.GetP3());
-    long double area3 = HeronTriangle(hit_point, rect.GetP3(), rect.GetP4());
-    long double area4 = HeronTriangle(hit_point, rect.GetP4(), rect.GetP1());
+    // Area Triangle Implementation
+    long double area1 = YuMath::TriangleArea(hit_point, rect.GetP1(), rect.GetP2());
+    long double area2 = YuMath::TriangleArea(hit_point, rect.GetP2(), rect.GetP3());
+    long double area3 = YuMath::TriangleArea(hit_point, rect.GetP3(), rect.GetP4());
+    long double area4 = YuMath::TriangleArea(hit_point, rect.GetP4(), rect.GetP1());
 
-    auto sum = (area1 + area2 + area3 + area4);
-    auto area = rect.GetArea();
-    auto area_delta = rect.GetArea() - sum;
+    auto area_delta = rect.GetArea() - area1 - area2 - area3 - area4;
 
-    auto is_in = std::abs(area_delta) < 0.05f; // 0.05f is for truncation errors.
-
-    if (!is_in) return false;
+    if (!(std::abs(area_delta) < 0.05f)) return false;// 0.05f is for truncation errors.
 
     // To get this formula, first find formula for intersection between a plane and a line(ray)
     // then to get your d = -(rect.GetP1().dot(rect.GetNormal())); // derived from "Scalar Form of the Equation of a Plane"
@@ -251,7 +248,7 @@ Color RayTracer::GetDiffuseColor(Ray& ray, bool gl = true)
     return diffuse;
 }
 
-void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool gl)
+void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool& gl)
 {
     Vector3d hit_normal = GetNormal(ray);
 
@@ -300,9 +297,7 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
     }
 
     //// Find next bounce
-    Vector3d new_direction = RandomDir(hit_normal); // Reflect(GetNormal(ray), -ray.direction);
-
-    Ray next_ray(*ray.hit_coor,new_direction);
+    Ray next_ray(*ray.hit_coor, YuMath::RandomDir(hit_normal)); // Reflect(GetNormal(ray), -ray.direction);
     
     if (Raycast(next_ray))
         Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, diffuse, hit_count, gl);
@@ -310,7 +305,7 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
         return;
 }
 
-Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, bool gl)
+Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, bool& gl)
 {
     unsigned int hit_count = 0;
     Color diffuse;
@@ -372,7 +367,6 @@ Color RayTracer::GetAmbientColor(const Ray& ray)
 
 Vector3d RayTracer::GetNormal(const Ray& ray)
 {
-    // Gets the hit normal //TODO: Refactored it into its own function
     if (ray.hit_obj->GetType() == SPHERE)  return (*ray.hit_coor - (*(Sphere*)(ray.hit_obj)).GetCenter()).normalized();
     else if (ray.hit_obj->GetType() == RECTANGLE) return (*(Rectangle*)(ray.hit_obj)).GetNormal();
     else {

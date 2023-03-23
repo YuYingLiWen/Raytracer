@@ -105,7 +105,7 @@ public:
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
     bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
-    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity,  Ray& ray, bool gl);
+    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity,  Ray& ray, bool& gl);
 
     Color GetDiffuseColor(Ray& ray, bool gl);
     Color GetSpecularColor(Ray& ray);
@@ -117,7 +117,7 @@ public:
     Vector3d GetNormal(const Ray& ray);
 
 private: 
-    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool gl);
+    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool& gl);
 };
 
 

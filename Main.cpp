@@ -3,6 +3,8 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <ctime>
+
 #include "RayTracer.h"
 
 #include "external/json.hpp"
@@ -46,8 +48,11 @@ int main()
         nlohmann::json j = nlohmann::json::parse(buffer.str());
         RayTracer tracer(j);
 
+        std::clock_t time = clock();
         tracer.run();
+        PRINT("Elapsed: " << ((float)(clock() - time) / CLOCKS_PER_SEC) << " seconds.");
+
     }
 
-    //std::cin.get();
+    std::cin.get();
 }

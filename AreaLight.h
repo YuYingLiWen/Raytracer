@@ -3,12 +3,11 @@
 
 #include "Light.h"
 #include "Rectangle.h"
+#include "YuMath.h"
 
 #define AREA_LIGHT "area"
 #include <cmath>
 
-extern Vector3d Lerp(Vector3d, Vector3d, double);
-extern double Clamp(double val, double min, double max);
 
 
 using namespace Eigen;
@@ -52,22 +51,22 @@ public:
             double lerp1 = 0.0f;
             while (true)
             {
-                Vector3d l1 = Lerp(p3, p4, lerp1);
-                Vector3d l2 = Lerp(p2, p1, lerp1);
+                Vector3d l1 = YuMath::Lerp(p3, p4, lerp1);
+                Vector3d l2 = YuMath::Lerp(p2, p1, lerp1);
 
                 if (lerp1 >= 1.0f) break;
 
-                lerp1 = Clamp(lerp1 + rate, 0.0f, 1.0f);
+                lerp1 = YuMath::Clamp(lerp1 + rate, 0.0f, 1.0f);
 
                 double lerp2 = 0.0f;
 
                 while (true)
                 {
-                    hits_points.push_back(Lerp(l1, l2, lerp2));
+                    hits_points.push_back(YuMath::Lerp(l1, l2, lerp2));
 
                     if (lerp2 >= 1.0f) break;
 
-                    lerp2 = Clamp(lerp2 + rate, 0.0f, 1.0f);
+                    lerp2 = YuMath::Clamp(lerp2 + rate, 0.0f, 1.0f);
                 }
             }
         }

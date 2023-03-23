@@ -17,31 +17,34 @@
 #define Deg2Rad (PI / 180.0f)
 #endif // !Deg2Rad
 
-using namespace Eigen;
-
-struct Tuple
+namespace YuMath
 {
-	double b_pos;
-	double b_neg;
-};
+	using namespace Eigen;
 
-double Discriminant(double a, double b, double c);
+	struct Tuple
+	{
+		double b_pos;
+		double b_neg;
+	};
 
-std::shared_ptr<Tuple> Quadratic(double a, double b, double c);
+	double Discriminant(double a, double b, double c);
 
-unsigned int HitResultsNum(double a, double b, double c);
+	std::shared_ptr<Tuple> Quadratic(double a, double b, double c);
 
-double HeronTriangle(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3);
+	unsigned int HitResultsNum(double a, double b, double c);
 
-Vector3d Lerp(Vector3d from, Vector3d to, double t);
+	double TriangleArea(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3);
 
-double Clamp(double val, double min, double max);
+	Vector3d Lerp(Vector3d from, Vector3d to, double t);
 
-Vector3d Reflect(const Vector3d& normal, const Vector3d& inverse);
+	double Clamp(double val, double min, double max);
 
-Vector3d ReflectRand(const Vector3d& normal, const Vector3d& inverse, const float rand_num);
+	Vector3d Reflect(const Vector3d& normal, const Vector3d& inverse);
 
-Vector3d RandomDir(const Vector3d& normal);
+	Vector3d ReflectRand(const Vector3d& normal, const Vector3d& inverse, const float rand_num);
+
+	Vector3d RandomDir(const Vector3d& normal);
+}
 
 #endif
 
