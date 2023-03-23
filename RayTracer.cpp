@@ -2,8 +2,6 @@
 
 #include <fstream>
 #include <memory>
-#include "Random.h"
-#include "YuMath.h" 
 #include <cmath>
 #include <cfloat>
 
@@ -212,7 +210,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
 // DIFFUSE
 
-Color RayTracer::GetDiffuseColor(Ray& ray)
+Color RayTracer::GetDiffuseColor(Ray& ray, bool gl = true)
 {
     auto& lights = scene->GetLights();
 
@@ -224,7 +222,7 @@ Color RayTracer::GetDiffuseColor(Ray& ray)
         {
             PointLight& point = *(PointLight*)light;
 
-            diffuse += CalculatePointLightDiffuse(point.GetCenter(), light->GetDiffuseIntensity(), ray);
+            diffuse += CalculatePointLightDiffuse(point.GetCenter(), light->GetDiffuseIntensity(), ray, gl);
         }
         else if (light->GetType() == AREA_LIGHT)
         {
@@ -232,7 +230,7 @@ Color RayTracer::GetDiffuseColor(Ray& ray)
 
             if (area.GetUseCenter())
             {
-                diffuse += CalculatePointLightDiffuse(area.GetCenter(), light->GetDiffuseIntensity(), ray);
+                diffuse += CalculatePointLightDiffuse(area.GetCenter(), light->GetDiffuseIntensity(), ray, gl);
             }
             else
             {
@@ -242,7 +240,7 @@ Color RayTracer::GetDiffuseColor(Ray& ray)
 
                 for (Vector3d& point : hit_points)
                 {
-                    color += CalculatePointLightDiffuse(point, light->GetDiffuseIntensity(), ray);
+                    color += CalculatePointLightDiffuse(point, light->GetDiffuseIntensity(), ray, gl);
                 }
 
                 diffuse += (color / (double)hit_points.size());
@@ -253,16 +251,12 @@ Color RayTracer::GetDiffuseColor(Ray& ray)
     return diffuse;
 }
 
-Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray)
+void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, CustomRandom& rng, bool gl)
 {
-    Camera* camera = Camera::GetInstance();
-
     Vector3d hit_normal = GetNormal(ray);
 
     Vector3d towards_light = light_center - *ray.hit_coor;
     Ray ray_towards_light(*ray.hit_coor, towards_light);
-
-    Geometry* geo = ray.hit_obj;
 
     double towards_light_distance = towards_light.norm();
     auto hits = RaycastAll(ray_towards_light, towards_light_distance);
@@ -282,22 +276,54 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const 
         }
     }
 
-    if (filtered_hits.size() > 0) return Color::Black();
+    hit_count++;
+    
+    if (!gl // Not using global illum
+        || hit_count >= Camera::GetInstance()->MaxBounce()
+        || rng.Generate() <= Camera::GetInstance()->ProbeTerminate())
+    {
+        if (filtered_hits.size() > 0) diffuse += Color::Black();
+        else
+        {
+            double cos_angle = towards_light.dot(hit_normal) / (towards_light_distance * hit_normal.norm());
 
-    double cos_angle = towards_light.dot(hit_normal) / (towards_light_distance * hit_normal.norm());
+            if (cos_angle < 0.0f) cos_angle = 0.0f;
 
-    if (cos_angle < 0.0f) cos_angle = 0.0f;
+            Geometry* geo = ray.hit_obj;
+            diffuse += (geo->GetDiffuseColor() * geo->GetDiffuseCoeff() * light_diffuse_intensity * cos_angle);
+        }
 
-    return (geo->GetDiffuseColor() * geo->GetDiffuseCoeff() * light_diffuse_intensity * cos_angle);
+        return;
+    }
+
+    //// Find next bounce
+    Vector3d new_direction = RandomDir(hit_normal, rng); // Reflect(GetNormal(ray), -ray.direction);
+
+    Ray next_ray(*ray.hit_coor,new_direction);
+    
+    if (Raycast(next_ray))
+        Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, diffuse, hit_count, rng, gl);
+    else
+        return;
+}
+
+Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, bool gl)
+{
+    unsigned int hit_count = 0;
+    Color diffuse;
+
+    CustomRandom rng;
+    Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, diffuse, hit_count, rng, gl);
+
+    return diffuse/hit_count;
 }
 
 
 
 /// OTHERS
 
-void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular)
+void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse)
 {
-
     Camera* camera = Camera::GetInstance();
     const double grid_size = camera->GridSize();
     const double sample_size = 1;//camera->SampleSize();
@@ -315,26 +341,20 @@ void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Co
             Vector3d sub_py = py + (camera->PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * camera->Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
             Vector3d subpixel_shoot_at = camera->OriginLookAt() + sub_px + sub_py;
 
-            for (uint16_t sample = 0; sample < sample_size; sample++) 
+            Ray ray = camera->MakeRay(subpixel_shoot_at);
+
+            if (Raycast(ray))
             {
-                Ray ray = camera->MakeRay(subpixel_shoot_at);
-
-                if (Raycast(ray))
+                for (uint16_t sample = 0; sample < sample_size; sample++)
                 {
-                    GetAmbientColor(ray);
-                    out_final_ambient += ray.ambient * ai;
-
-                    if (use_specular)
-                    {
-                        out_final_specular += GetSpecularColor(ray);
-                    }
+                    out_final_ambient += GetAmbientColor(ray) * ai;
 
                     out_final_diffuse += GetDiffuseColor(ray);
                 }
-                else
-                {
-                    out_final_ambient += scene->GetOuput()->GetBgColor();
-                }
+            }
+            else
+            {
+                out_final_ambient += scene->GetOuput()->GetBgColor();
             }
         }
     }
@@ -342,13 +362,14 @@ void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Co
     //Final Colors
     out_final_ambient /= total_samples;
     out_final_diffuse /= total_samples;
-    out_final_specular /= total_samples;
 }
 
-void RayTracer::GetAmbientColor(Ray& ray)
+Color RayTracer::GetAmbientColor(const Ray& ray)
 {
     Geometry& geo = *ray.hit_obj;
-    ray.ambient = geo.GetAmbientColor() * geo.GetAmbientCoeff();
+
+    Color c = geo.GetAmbientColor() * geo.GetAmbientCoeff();
+    return c;
 }
 
 Vector3d RayTracer::GetNormal(const Ray& ray)
@@ -366,7 +387,7 @@ void RayTracer::Trace()
 {
     PRINT("Tracing...");
 
-    Random rng;
+    CustomRandom rng;
 
     Camera* camera = Camera::GetInstance();
 
@@ -381,7 +402,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = false; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = true; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
@@ -400,30 +421,27 @@ void RayTracer::Trace()
             Vector3d pixel_shoot_at = camera->OriginLookAt() + px + py;
 
             Ray ray = camera->MakeRay(pixel_shoot_at);
+            bool hit = Raycast(ray);
 
-            if (Raycast(ray))
+            if (use_AA)
             {
-                if (use_AA)
+                UseMSAA(px, py, final_ambient, final_diffuse);
+            }
+            else // No AA
+            {
+                if (hit)
                 {
-                    UseMSAA(px, py, final_ambient, final_diffuse, final_specular, use_specular);
+                    final_diffuse = GetDiffuseColor(ray, false);
+                    final_ambient = GetAmbientColor(ray) * camera->AmbientIntensity();
                 }
-                else // No AA
+                else
                 {
-                    GetAmbientColor(ray);
-                    final_ambient = ray.ambient * camera->AmbientIntensity();
-
-                    final_diffuse = GetDiffuseColor(ray);
-
-                    if (use_specular)
-                    {
-                        final_specular = GetSpecularColor(ray);
-                    }
+                    final_ambient = scene->GetOuput()->GetBgColor();
                 }
             }
-            else
-            {
-                final_ambient = scene->GetOuput()->GetBgColor();
-            }
+
+            if (hit && use_specular) final_specular = GetSpecularColor(ray);
+
 
             output_buffer[counter] = (final_ambient + final_diffuse + final_specular).Clamp();
 

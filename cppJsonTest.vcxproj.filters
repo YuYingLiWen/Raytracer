@@ -74,7 +74,7 @@
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Random.h">
+    <ClInclude Include="CustomRandom.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="YuMath.h">

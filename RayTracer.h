@@ -7,6 +7,7 @@
 #include "Scene.h"
 #include "Ray.h"
 #include "Camera.h"
+#include "YuMath.h" 
 
 #include <cstdio>
 #include <iostream>
@@ -86,8 +87,7 @@ public:
     { 
         PRINT("Setting the camera...");
 
-        Camera* camera = Camera::GetInstance();
-        camera->SetData(*scene->GetOuput(), 0.5f);
+        Camera::GetInstance()->SetData(*scene->GetOuput(), 1.0f);
     }
 
     /// Starts tracing the scene
@@ -105,16 +105,19 @@ public:
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
     bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
-    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity,  Ray& ray);
+    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity,  Ray& ray, bool gl);
 
-    Color GetDiffuseColor(Ray& ray);
+    Color GetDiffuseColor(Ray& ray, bool gl);
     Color GetSpecularColor(Ray& ray);
 
-    void GetAmbientColor(Ray& ray);
+    Color GetAmbientColor(const Ray& ray);
 
-    void UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, Color& out_final_specular, bool use_specular);
+    void UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse);
 
     Vector3d GetNormal(const Ray& ray);
+
+private: 
+    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, CustomRandom& rng, bool gl);
 };
 
 

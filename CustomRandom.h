@@ -2,10 +2,10 @@
 
 #include <random>
 
-class Random
+class CustomRandom
 {
 public:
-	Random() 
+	CustomRandom() 
 	{
 		std::srand((unsigned int)std::time(nullptr)); // seeds the RNG
 	}

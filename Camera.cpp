@@ -33,7 +33,7 @@ void Camera::SetData(const Output& output, float resolution_factor = 1.0f)
 	scaled_pixel = half_image * aspect_ratio;
 	ambient_intensity = output.ai;
 	max_bounce = output.max_bounce != nullptr ? *output.max_bounce : 0;
-	probe_terminate = output.probe_terminate != nullptr ? *output.probe_terminate : 0.0f;
+	probe_terminate = output.probe_terminate != nullptr ? *output.probe_terminate : 1.0f;
 
 	ppm_buffer = new std::vector<Color>((size_t)width * (size_t)height);
 }

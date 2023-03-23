@@ -148,7 +148,7 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Output.h" />
     <ClInclude Include="PointLight.h" />
-    <ClInclude Include="Random.h" />
+    <ClInclude Include="CustomRandom.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RayTracer.h" />
     <ClInclude Include="Rectangle.h" />

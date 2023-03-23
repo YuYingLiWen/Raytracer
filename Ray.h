@@ -23,9 +23,6 @@ public:
 
     };
 
-    //Ray& operator=(const )
-
-
     Vector3d GetOrigin() const { return origin; }
     
     Vector3d GetDirection() const {
@@ -72,10 +69,7 @@ public:
     Vector3d origin;
     Vector3d direction;
 
-
     Color diffuse;
-    Color specular;
-    Color ambient;
 };
 
 
