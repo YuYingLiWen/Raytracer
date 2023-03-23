@@ -30,6 +30,7 @@ namespace YuMath
 	double Discriminant(double a, double b, double c);
 
 	std::shared_ptr<Tuple> Quadratic(double a, double b, double c);
+	std::shared_ptr<Tuple> Quadratic(double a, double b, double c, double discriminant);
 
 	unsigned int HitResultsNum(double a, double b, double c);
 

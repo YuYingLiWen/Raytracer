@@ -81,9 +81,10 @@ bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersec
     b = 2.0f * ray.GetDirection().dot(distance);
     c = distance.dot(distance) - sphere.GetRadius() * sphere.GetRadius();
 
-    if (YuMath::Discriminant(a, b, c) < 0) return false; // Imaginary numbers
+    double disc = YuMath::Discriminant(a, b, c);
+    if (disc < 0) return false; // Imaginary numbers
     
-    auto t = YuMath::Quadratic(a, b, c);
+    auto t = YuMath::Quadratic(a, b, c, disc);
 
     double b_pos_length = (ray.GetPoint(t->b_pos) - ray.GetOrigin()).norm();
     double b_neg_length = (ray.GetPoint(t->b_neg) - ray.GetOrigin()).norm();
@@ -152,7 +153,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
     for (auto& light : *lights)
     {
-        if (light->GetType() == POINT_LIGHT)
+        if (light->GetType().compare(POINT_LIGHT) == 0)
         {
             PointLight& point = *(PointLight*)light;
 
@@ -171,7 +172,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
             specular += (light->GetSpecularIntensity() * ray.hit_obj->GetSpecularCoeff() * ray.hit_obj->GetSpecularColor() * std::pow(cos_angle, ray.hit_obj->GetPhongCoeff()));
         }
-        else if (light->GetType() == AREA_LIGHT)
+        else if (light->GetType().compare(AREA_LIGHT) == 0)
         {
             AreaLight& area = *(AreaLight*)light;
 
@@ -215,13 +216,13 @@ Color RayTracer::GetDiffuseColor(Ray& ray, bool gl = true)
 
     for (auto& light : *lights)
     {
-        if (light->GetType() == POINT_LIGHT)
+        if (light->GetType().compare(POINT_LIGHT) == 0)
         {
             PointLight& point = *(PointLight*)light;
 
             diffuse += CalculatePointLightDiffuse(point.GetCenter(), light->GetDiffuseIntensity(), ray, gl);
         }
-        else if (light->GetType() == AREA_LIGHT)
+        else if (light->GetType().compare(AREA_LIGHT) == 0)
         {
             AreaLight& area = *(AreaLight*)light;
 
@@ -367,8 +368,8 @@ Color RayTracer::GetAmbientColor(const Ray& ray)
 
 Vector3d RayTracer::GetNormal(const Ray& ray)
 {
-    if (ray.hit_obj->GetType() == SPHERE)  return (*ray.hit_coor - (*(Sphere*)(ray.hit_obj)).GetCenter()).normalized();
-    else if (ray.hit_obj->GetType() == RECTANGLE) return (*(Rectangle*)(ray.hit_obj)).GetNormal();
+    if (ray.hit_obj->GetType().compare(SPHERE) == 0)  return (*ray.hit_coor - (*(Sphere*)(ray.hit_obj)).GetCenter()).normalized();
+    else if (ray.hit_obj->GetType().compare(RECTANGLE) == 0) return (*(Rectangle*)(ray.hit_obj)).GetNormal();
     else {
         PRINT("Something went wrong...");
         return Vector3d();
@@ -393,7 +394,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = true; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = false; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row

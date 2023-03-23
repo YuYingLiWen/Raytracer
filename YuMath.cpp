@@ -12,12 +12,25 @@ namespace YuMath
 		if (disc < 0) return nullptr;
 		if (a < 0) return nullptr;
 
-		double pos = (-b + std::sqrt(disc)) / (2.0f * a);
-		double neg = (-b - std::sqrt(disc)) / (2.0f * a);
+		double root_disc = std::sqrt(disc);
 
 		auto tuple = std::make_shared<Tuple>();
-		tuple->b_pos = pos;
-		tuple->b_neg = neg;
+		tuple->b_pos = (-b + root_disc) / (2.0f * a);
+		tuple->b_neg = (-b - root_disc) / (2.0f * a);
+
+		return tuple;
+	}
+
+	std::shared_ptr<Tuple> Quadratic(double a, double b, double c, double discriminant)
+	{
+		if (discriminant < 0) return nullptr;
+		if (a < 0) return nullptr;
+
+		double root_disc = std::sqrt(discriminant);
+
+		auto tuple = std::make_shared<Tuple>();
+		tuple->b_pos = (-b + root_disc) / (2.0f * a);
+		tuple->b_neg = (-b - root_disc) / (2.0f * a);
 
 		return tuple;
 	}

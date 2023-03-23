@@ -50,7 +50,7 @@ int main()
 
         std::clock_t time = clock();
         tracer.run();
-        PRINT("Elapsed: " << ((float)(clock() - time) / CLOCKS_PER_SEC) << " seconds.");
+        PRINT("Elapsed: " << ((float)(clock() - time) / CLOCKS_PER_SEC) << " seconds OR " << ((float)(clock() - time) / CLOCKS_PER_SEC / CLOCKS_PER_SEC) << " minutes.");
 
     }
 
