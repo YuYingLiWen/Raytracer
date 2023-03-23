@@ -21,9 +21,9 @@
 #endif
 
 
-extern void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geometries);
-extern void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights);
-extern void JSONReadOutput(Output* scene_output, nlohmann::json& output);
+extern void JSONReadGeometries(std::vector<Geometry*>& scene_geo, nlohmann::json& geometries);
+extern void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& lights);
+extern void JSONReadOutput(Output& scene_output, nlohmann::json& output);
 
 
 using namespace Eigen;
@@ -33,8 +33,8 @@ class RayTracer
 {
 private:
     nlohmann::json json_file;
+    Scene scene;
 
-    Scene* scene = nullptr;
 public:
     RayTracer(nlohmann::json json_file)
         :json_file(json_file)
@@ -44,7 +44,6 @@ public:
 
     ~RayTracer() 
     {
-        delete scene;
     }
 
     /// Main function that starts the tracer.
@@ -66,15 +65,13 @@ public:
     {
         PRINT("Building scene...");
 
-        scene = new Scene();
-
         nlohmann::json geo = json_file.at("geometry");
         nlohmann::json light = json_file.at("light");
         nlohmann::json output = json_file.at("output");
 
-        JSONReadGeometries(scene->GetGeometries(), geo);
-        JSONReadLights(scene->GetLights(), light);
-        JSONReadOutput(scene->GetOuput(), output);
+        JSONReadGeometries(scene.GetGeometries(), geo);
+        JSONReadLights(scene.GetLights(), light);
+        JSONReadOutput(scene.GetOuput(), output);
 
         //#if _DEBUG
         //        scene->PrintGeometries();
@@ -87,7 +84,7 @@ public:
     { 
         PRINT("Setting the camera...");
 
-        Camera::GetInstance().SetData(*scene->GetOuput(), 1.00f);
+        Camera::GetInstance().SetData(scene.GetOuput(), 0.50f);
     }
 
     /// Starts tracing the scene

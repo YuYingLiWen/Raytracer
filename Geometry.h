@@ -23,13 +23,13 @@ public:
 
     inline const auto& GetType() const { return type; }
     inline const auto& GetName() const { return name; }
-    inline float GetPhongCoeff()  { return pc; }
-    inline auto GetAmbientColor() { return ac; }
-    inline auto GetDiffuseColor()  { return dc; }
-    inline auto GetSpecularColor()  { return sc; }
-    inline auto GetSpecularCoeff()  { return ks; }
-    inline auto GetDiffuseCoeff() { return kd; }
-    inline auto GetAmbientCoeff() { return ka; }
+    inline const auto& GetPhongCoeff() const { return pc; }
+    inline const auto& GetAmbientColor() const { return ac; }
+    inline const auto& GetDiffuseColor() const { return dc; }
+    inline const auto& GetSpecularColor() const { return sc; }
+    inline const auto& GetSpecularCoeff() const { return ks; }
+    inline const auto& GetDiffuseCoeff() const { return kd; }
+    inline const auto& GetAmbientCoeff() const { return ka; }
 
     virtual std::string ToString() const
     {

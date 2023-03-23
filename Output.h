@@ -66,7 +66,7 @@ public:
     inline const auto& GetAmbientIntensity() const { return ai; }
     inline const auto& GetBgColor() const { return bkc; }
 
-    inline bool HasGlobalIllumination() 
+    inline bool HasGlobalIllumination() const
     { 
         if (global_illum) return *global_illum;
         

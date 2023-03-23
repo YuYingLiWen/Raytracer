@@ -7,7 +7,7 @@
 
 #include "Geometry.h"
 #include <cfloat>
-#include <memory>
+
 #include <iostream>
 using namespace Eigen;
 class Ray

@@ -20,7 +20,7 @@ nlohmann::basic_json<>::value_type JSONGetValue(nlohmann::json& j, std::string v
     }
 }
 
-void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geometries)
+void JSONReadGeometries(std::vector<Geometry*>& scene_geo, nlohmann::json& geometries)
 {
     for (auto& item : geometries.items())
     {
@@ -41,7 +41,7 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
         float ks = (float)value.at("ks");
         float pc = (float)value.at("pc");
 
-        if (type == "rectangle")
+        if (type.compare("rectangle") == 0)
         {
             Vector3d points[4];
 
@@ -57,9 +57,9 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
             }
             Rectangle* rect = new Rectangle(type, name, ka, kd, ks, pc, ac, dc, sc, points[0], points[1], points[2], points[3]);
 
-            scene_geo->push_back((Geometry*)rect);
+            scene_geo.push_back((Geometry*)rect);
         }
-        else if (type == "sphere")
+        else if (type.compare("sphere") == 0)
         {
             auto& val_p = value.at("centre");
             auto radius = (double)value.at("radius");
@@ -68,7 +68,7 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
             Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
 
             Sphere* sphere = new Sphere(type, name, ka, kd, ks, pc, ac, dc, sc, center, radius);
-            scene_geo->push_back((Geometry*)sphere);
+            scene_geo.push_back((Geometry*)sphere);
         }
         else
         {
@@ -77,7 +77,7 @@ void JSONReadGeometries(std::vector<Geometry*>* scene_geo, nlohmann::json& geome
     }
 }
 
-void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
+void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& lights)
 {
     for (auto& item : lights.items())
     {
@@ -93,7 +93,7 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
 
         if (!use) continue;
 
-        if (type == "area")
+        if (type.compare("area") == 0)
         {
             Vector3d points[4];
 
@@ -107,16 +107,16 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
 
             AreaLight* area = new AreaLight(type, id, is, points[0], points[1], points[2], points[3], use_center);
 
-            scene_lights->push_back((Light*)area);
+            scene_lights.push_back((Light*)area);
         }
-        else if (type == "point")
+        else if (type.compare("point") == 0)
         {
             auto& val_p = value.at("centre");
 
             Vector3d center((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
 
             PointLight* point = new PointLight(type, id, is, center);
-            scene_lights->push_back((Light*)point);
+            scene_lights.push_back((Light*)point);
         }
         else
         {
@@ -125,7 +125,7 @@ void JSONReadLights(std::vector<Light*>* scene_lights, nlohmann::json& lights)
     }
 }
 
-void JSONReadOutput(Output* scene_output, nlohmann::json& output)
+void JSONReadOutput(Output& scene_output, nlohmann::json& output)
 {
     nlohmann::json value = output.at(0);
 
@@ -157,5 +157,5 @@ void JSONReadOutput(Output* scene_output, nlohmann::json& output)
         data.rays_per_pixel = new Vector2i(val_ray_per_pixel.at(0), val_ray_per_pixel.at(1));
     }
 
-    scene_output->Set(data);
+    scene_output.Set(data);
 }

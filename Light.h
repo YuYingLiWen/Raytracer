@@ -23,8 +23,8 @@ public:
     }
 
     inline const auto& GetType() const { return type; }
-    inline auto GetDiffuseIntensity() const { return id; }
-    inline auto GetSpecularIntensity() const { return is; }
+    inline const auto& GetDiffuseIntensity() const { return id; }
+    inline const auto& GetSpecularIntensity() const { return is; }
 
     friend std::ostream& operator << (std::ostream& os, const Light& l)
     {

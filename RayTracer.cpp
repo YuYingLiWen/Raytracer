@@ -1,7 +1,7 @@
 #include "RayTracer.h"
 
 #include <fstream>
-#include <memory>
+
 #include <cmath>
 #include <cfloat>
 
@@ -40,13 +40,11 @@ bool RayTracer::Raycast(Ray& ray, double max_distance = DBL_MAX)
 // Shoot a ray in the scene to find all objects that intersects it.
 std::vector<Hit> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL_MAX)
 {
-    auto geometries = scene->GetGeometries();
-
-    size_t size = geometries->size();
+    auto& geometries = scene.GetGeometries();
 
     std::vector<Hit> hits;
 
-    for (Geometry* geo : *geometries) 
+    for (Geometry* geo : geometries) 
     {
         bool hit = false;
 
@@ -145,9 +143,9 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
     Vector3d hit_normal = GetNormal(ray);
 
-    auto& lights = scene->GetLights();
+    auto& lights = scene.GetLights();
 
-    for (auto& light : *lights)
+    for (auto& light : lights)
     {
         if (light->GetType().compare(POINT_LIGHT) == 0)
         {
@@ -206,11 +204,11 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
 Color RayTracer::GetDiffuseColor(Ray& ray, bool gl = true)
 {
-    auto& lights = scene->GetLights();
+    auto& lights = scene.GetLights();
 
     Color diffuse;
 
-    for (auto& light : *lights)
+    for (auto& light : lights)
     {
         if (light->GetType().compare(POINT_LIGHT) == 0)
         {
@@ -346,7 +344,7 @@ void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Co
             }
             else
             {
-                out_final_ambient += scene->GetOuput()->GetBgColor();
+                out_final_ambient += scene.GetOuput().GetBgColor();
             }
         }
     }
@@ -376,9 +374,8 @@ void RayTracer::Trace()
 {
     PRINT("Tracing...");
 
-
     // Caching lots to precomputed data before casting rays.
-    auto& output = scene->GetOuput();
+    auto& output = scene.GetOuput();
 
     Camera& camera = Camera::GetInstance();
 
@@ -390,8 +387,8 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = true; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
-    bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
+    bool use_AA = true; //!(output->HasGlobalIllumination() || scene.HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_specular =  !output.HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
     for (uint32_t y = 0; y < camera.Height(); y++)
@@ -424,7 +421,7 @@ void RayTracer::Trace()
                 }
                 else
                 {
-                    final_ambient = scene->GetOuput()->GetBgColor();
+                    final_ambient = scene.GetOuput().GetBgColor();
                 }
             }
 
@@ -443,9 +440,9 @@ void RayTracer::SaveToPPM()
     
     Camera& camera = Camera::GetInstance();
 
-    PRINT("Saving output as " + scene->GetOuput()->GetFileName() + ".");
+    PRINT("Saving output as " + scene.GetOuput().GetFileName() + ".");
 
-    std::ofstream ofs(".\\outputs\\" + scene->GetOuput()->GetFileName(), std::ios_base::out | std::ios_base::binary);
+    std::ofstream ofs(".\\outputs\\" + scene.GetOuput().GetFileName(), std::ios_base::out | std::ios_base::binary);
     ofs << "P6" << std::endl << camera.Width() << ' ' << camera.Height() << std::endl << "255" << std::endl;
 
     auto& buffer = camera.GetOutputBuffer();

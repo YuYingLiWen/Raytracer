@@ -5,7 +5,7 @@
 // Last assert: Feb 17, 2023
 
 #include <cmath>
-#include <memory>
+
 #include "Eigen/Core"
 #include "CustomRandom.h"
 
