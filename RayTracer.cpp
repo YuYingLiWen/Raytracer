@@ -7,7 +7,7 @@
 
 struct Hit 
 {
-    std::shared_ptr<Vector3d> point;
+    Vector3d point;
     Geometry* obj;
 
     Hit& operator=(const Hit& hit)
@@ -23,10 +23,10 @@ bool RayTracer::Raycast(Ray& ray, double max_distance = DBL_MAX)
 {
     auto hits = RaycastAll(ray, max_distance);
 
-    if (hits->empty()) return false;
+    if (hits.empty()) return false;
 
     // Find the nearest obj
-    for (auto& hit : *hits)
+    for (auto& hit : hits)
     {
         if (ray.IsCloser(hit.point))
         {
@@ -38,32 +38,32 @@ bool RayTracer::Raycast(Ray& ray, double max_distance = DBL_MAX)
 }
 
 // Shoot a ray in the scene to find all objects that intersects it.
-std::shared_ptr<std::vector<Hit>> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL_MAX)
+std::vector<Hit> RayTracer::RaycastAll(const Ray& ray, double max_distance = DBL_MAX)
 {
     auto geometries = scene->GetGeometries();
 
     size_t size = geometries->size();
 
-    auto hits = std::make_shared<std::vector<Hit>>();
+    std::vector<Hit> hits;
 
     for (Geometry* geo : *geometries) 
     {
         bool hit = false;
 
-        auto intersect = std::make_shared<Vector3d>();
+        Vector3d intersect;
 
         if (geo->GetType().compare(RECTANGLE) == 0)
         {
-            hit = IntersectCoor(ray, *((Rectangle*)geo), *intersect);
+            hit = IntersectCoor(ray, *((Rectangle*)geo), intersect);
         }
         else if (geo->GetType().compare(SPHERE) == 0)
         {
-            hit = IntersectCoor(ray, *((Sphere*)geo), *intersect);
+            hit = IntersectCoor(ray, *((Sphere*)geo), intersect);
         }
 
         if (hit && ray.GetDistance(intersect) < max_distance)
         {
-            hits->push_back(Hit{ intersect, geo });
+            hits.push_back(Hit{ intersect, geo });
         }
     }
 
@@ -140,7 +140,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
 
 
-    Vector3d towards_camera = Camera::GetInstance().Position() - *ray.hit_coor;
+    Vector3d towards_camera = Camera::GetInstance().Position() - ray.GetHitCoor();
     Color specular;
 
     Vector3d hit_normal = GetNormal(ray);
@@ -153,7 +153,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
         {
             PointLight& point = *(PointLight*)light;
 
-            Vector3d towards_light = point.GetCenter() - *ray.hit_coor;
+            Vector3d towards_light = point.GetCenter() - ray.GetHitCoor();
 
             //Phong
             //Vector3d reflect = Reflect(hit_normal, towards_light);
@@ -178,7 +178,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
             for (Vector3d& point : hit_points)
             {
-                Vector3d towards_light = point - *ray.hit_coor;
+                Vector3d towards_light = point - ray.GetHitCoor();
 
                 //Phong
                 //Vector3d reflect = Reflect(hit_normal, towards_light);
@@ -249,18 +249,18 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
 {
     Vector3d hit_normal = GetNormal(ray);
 
-    Vector3d towards_light = light_center - *ray.hit_coor;
-    Ray ray_towards_light(*ray.hit_coor, towards_light);
+    Vector3d towards_light = light_center - ray.GetHitCoor();
+    Ray ray_towards_light(ray.GetHitCoor(), towards_light);
 
     double towards_light_distance = towards_light.norm();
     auto hits = RaycastAll(ray_towards_light, towards_light_distance);
     std::vector<Hit> filtered_hits;
 
     // Filter out objects that are not in between light & hit
-    for (Hit& hit : *hits)
+    for (Hit& hit : hits)
     {
-        double to_light_dist = (*hit.point - light_center).norm();
-        double to_hit_coor_dist = (*hit.point - *ray.hit_coor).norm();
+        double to_light_dist = (hit.point - light_center).norm();
+        double to_hit_coor_dist = (hit.point - ray.GetHitCoor()).norm();
 
         if (to_light_dist > 0.001f  // Object is embedded in light
             && to_hit_coor_dist > 0.001f // Object is hit coordinate
@@ -294,7 +294,7 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
     }
 
     //// Find next bounce
-    Ray next_ray(*ray.hit_coor, YuMath::RandomDir(hit_normal)); // Reflect(GetNormal(ray), -ray.direction);
+    Ray next_ray(ray.GetHitCoor(), YuMath::RandomDir(hit_normal)); // Reflect(GetNormal(ray), -ray.direction);
     
     if (Raycast(next_ray))
         Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, diffuse, hit_count, gl);
@@ -364,7 +364,7 @@ Color RayTracer::GetAmbientColor(const Ray& ray)
 
 Vector3d RayTracer::GetNormal(const Ray& ray)
 {
-    if (ray.hit_obj->GetType().compare(SPHERE) == 0)  return (*ray.hit_coor - (*(Sphere*)(ray.hit_obj)).GetCenter()).normalized();
+    if (ray.hit_obj->GetType().compare(SPHERE) == 0)  return (ray.GetHitCoor() - (*(Sphere*)(ray.hit_obj)).GetCenter()).normalized();
     else if (ray.hit_obj->GetType().compare(RECTANGLE) == 0) return (*(Rectangle*)(ray.hit_obj)).GetNormal();
     else {
         PRINT("Something went wrong...");

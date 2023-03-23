@@ -87,7 +87,7 @@ public:
     { 
         PRINT("Setting the camera...");
 
-        Camera::GetInstance().SetData(*scene->GetOuput(), 0.10f);
+        Camera::GetInstance().SetData(*scene->GetOuput(), 1.00f);
     }
 
     /// Starts tracing the scene
@@ -99,7 +99,7 @@ public:
     bool Raycast(Ray& ray, double max_distance);
 
     // Returns an array of object that ray intersected with.
-    std::shared_ptr<std::vector<Hit>> RaycastAll(const Ray& ray, double max_distance);
+    std::vector<Hit> RaycastAll(const Ray& ray, double max_distance);
 
     // Saves the closest hit point on the sphere to ray
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);

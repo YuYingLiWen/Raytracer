@@ -1,19 +1,21 @@
 #ifndef RAY_H
 #define RAY_H
 
+
 #include "Eigen/Core"
 #include "Eigen/Dense"
 
 #include "Geometry.h"
 #include <cfloat>
 #include <memory>
-
+#include <iostream>
 using namespace Eigen;
 class Ray
 {
 public:
 
-    Ray() {};
+    Ray() {
+    };
     Ray(Vector3d origin, Vector3d direction)
         :origin(origin), direction(direction)
     {
@@ -32,38 +34,44 @@ public:
     // If hit nothing distance == INIFINITY
     double GetHitDistance() const 
     { 
-        if (!hit_coor) return INFINITY;
+        if (hit_coor.hasNaN()) return INFINITY;
 
-        return (*hit_coor - origin).norm(); 
+        return (hit_coor - origin).norm(); 
     }
 
     // From origin of this ray to a point
-    double GetDistance(const std::shared_ptr<Vector3d> point) const 
+    double GetDistance(const Vector3d& point) const 
     { 
-        if (point == nullptr) return DBL_MAX;
-        return (*point - origin).norm(); 
+        if (point.hasNaN()) return DBL_MAX;
+        return (point - origin).norm(); 
     }
 
     
     Vector3d GetPoint(double& distance) const { return distance * direction + origin; }
 
-    bool IsCloser(std::shared_ptr<Vector3d> point)
+    bool IsCloser(const Vector3d& point)
     {
-        if (!hit_coor) return true;
-        return (GetDistance(point) < (*hit_coor - origin).norm());
+        if (hit_coor.hasNaN()) return true;
+        return (GetDistance(point) < (hit_coor - origin).norm());
     }
 
-    void SetClosestHit(std::shared_ptr<Vector3d> point, Geometry& hit_obj)
+    void SetClosestHit(const Vector3d& point, Geometry& hit_obj)
     {
-        if (!hit_coor) hit_coor = point;
-        else hit_coor = point;
-
+        hit_coor = point;
         this->hit_obj = &hit_obj;
     }
 
+    const Vector3d& GetHitCoor() const
+    {
+        return hit_coor;
+    }
+
+private:
+    Vector3d hit_coor = Vector3d(NAN,NAN,NAN);
+
 public:
     Geometry* hit_obj = nullptr;
-    std::shared_ptr<Vector3d> hit_coor = nullptr;
+
     
 public:
     Vector3d origin;
