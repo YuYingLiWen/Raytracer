@@ -12,8 +12,8 @@ Scene* LoadScene(std::string&);
 
 int main()
 {
-    std::string files[] = {"cornell_box_empty_pl"};
-    //std::string files[] = {"cornell_box"};
+    //std::string files[] = {"cornell_box_empty_pl"};
+    std::string files[] = {"cornell_box"};
     //std::string files[] = { "test_scene1" };
     //std::string files[] = { "test_area_light1" };
     //std::string files[] = { "test_scene1B" };

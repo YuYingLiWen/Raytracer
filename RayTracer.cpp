@@ -282,7 +282,10 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
         || hit_count >= Camera::GetInstance().MaxBounce()
         || CustomRandom::GetInstance().Generate() <= Camera::GetInstance().ProbeTerminate())
     {
-        if (filtered_hits.size() > 0) diffuse += Color::Black();
+        if (filtered_hits.size() > 0) 
+        {
+            diffuse += Color::Black();
+        }
         else
         {
             double cos_angle = towards_light.dot(hit_normal) / (towards_light_distance * hit_normal.norm());
@@ -323,12 +326,11 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const 
 
 void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse)
 {
-;
     const double grid_size = Camera::GetInstance().GridSize();
-    const double sample_size = 1;//camera->SampleSize();
+    const double sample_size = Camera::GetInstance().SampleSize();
 
     const double subpixel_center = Camera::GetInstance().PixelCenter() / grid_size;
-    const double total_samples = grid_size * grid_size * sample_size;
+    const double total_samples = grid_size * grid_size; // * sample_size;
 
     //Scanline for each row -> column
     for (uint16_t grid_y = 0; grid_y < grid_size; grid_y++)
@@ -365,9 +367,7 @@ void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Co
 Color RayTracer::GetAmbientColor(const Ray& ray)
 {
     Geometry& geo = *ray.hit_obj;
-
-    Color c = geo.GetAmbientColor() * geo.GetAmbientCoeff();
-    return c;
+    return geo.GetAmbientColor() * geo.GetAmbientCoeff();
 }
 
 Vector3d RayTracer::GetNormal(const Ray& ray)
@@ -429,7 +429,7 @@ void RayTracer::Trace()
                 if (hit)
                 {
                     final_diffuse = GetDiffuseColor(ray, false);
-                    final_ambient = GetAmbientColor(ray) * camera.AmbientIntensity();
+                    final_ambient = GetAmbientColor(ray);
                 }
                 else
                 {
@@ -440,7 +440,7 @@ void RayTracer::Trace()
             if (hit && use_specular) final_specular = GetSpecularColor(ray);
 
 
-            output_buffer[counter] = (final_ambient + final_diffuse + final_specular).Clamp();
+            output_buffer[counter] = (final_ambient * camera.AmbientIntensity() + final_diffuse + final_specular).Clamp();
 
             counter++;
         }
