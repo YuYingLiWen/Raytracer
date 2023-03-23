@@ -87,7 +87,7 @@ public:
     { 
         PRINT("Setting the camera...");
 
-        Camera::GetInstance().SetData(*scene->GetOuput(), 1.0f);
+        Camera::GetInstance().SetData(*scene->GetOuput(), 0.10f);
     }
 
     /// Starts tracing the scene

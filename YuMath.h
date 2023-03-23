@@ -14,7 +14,7 @@
 #endif // !PI
 
 #ifndef Deg2Rad
-#define Deg2Rad (PI / 180.0f)
+#define Deg2Rad 0.01745329251994f //(PI / 180.0f) from the above pi
 #endif // !Deg2Rad
 
 namespace YuMath

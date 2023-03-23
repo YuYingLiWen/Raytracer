@@ -52,11 +52,11 @@ std::shared_ptr<std::vector<Hit>> RayTracer::RaycastAll(const Ray& ray, double m
 
         auto intersect = std::make_shared<Vector3d>();
 
-        if (geo->GetType() == RECTANGLE)
+        if (geo->GetType().compare(RECTANGLE) == 0)
         {
             hit = IntersectCoor(ray, *((Rectangle*)geo), *intersect);
         }
-        else if (geo->GetType() == SPHERE)
+        else if (geo->GetType().compare(SPHERE) == 0)
         {
             hit = IntersectCoor(ray, *((Sphere*)geo), *intersect);
         }
@@ -98,12 +98,8 @@ bool RayTracer::IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersec
 
 
 /// RECTANGLE
-
-
-
 bool RayTracer::IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect)
 {
-
     auto vn = ray.GetDirection().dot(rect.GetNormal());
 
     if (vn == 0) return false; // Checks if ray is parallele to plane, if parallele return false
@@ -142,7 +138,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
     //auto opposite = incoming - adjacent;
     //Vector3d reflect =  adjacent - opposite ;
 
-;
+
 
     Vector3d towards_camera = Camera::GetInstance().Position() - *ray.hit_coor;
     Color specular;
@@ -329,9 +325,9 @@ void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Co
     const double total_samples = grid_size * grid_size; // * sample_size;
 
     //Scanline for each row -> column
-    for (uint16_t grid_y = 0; grid_y < grid_size; grid_y++)
+    for (uint32_t grid_y = 0; grid_y < grid_size; grid_y++)
     {
-        for (uint16_t grid_x = 0; grid_x < grid_size; grid_x++) // Samples area color around the current pixel
+        for (uint32_t grid_x = 0; grid_x < grid_size; grid_x++) // Samples area color around the current pixel
         {
             Vector3d sub_px = px + (Camera::GetInstance().PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center) * Camera::GetInstance().Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
             Vector3d sub_py = py + (Camera::GetInstance().PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * Camera::GetInstance().Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
@@ -394,7 +390,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = false; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = true; //!(output->HasGlobalIllumination() || scene->HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row

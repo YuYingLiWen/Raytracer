@@ -79,11 +79,15 @@ namespace YuMath
 		//Note that rand_num needs to be between 
 		// inverse as in the inverse vector that hits the base of the normal vector
 
-		Vector3d rand_vector(CustomRandom::GetInstance().Generate(1.0f), CustomRandom::GetInstance().Generate(1.0f), CustomRandom::GetInstance().Generate(1.0f));
-		rand_vector.normalize();
+		double tetha = CustomRandom::GetInstance().GenerateAngle(360.0f);
+		double phi = CustomRandom::GetInstance().GenerateAngle(360.0f);
 
-		double cos_angle = normal.dot(rand_vector);
+		Vector3d rand_vector(
+			std::sin(tetha) * std::cos(phi),
+			std::sin(tetha) * std::sin(phi),
+			std::cos(tetha)
+		);
 
-		return (cos_angle < 0 ? -rand_vector : rand_vector);
+		return (normal.dot(rand_vector) < 0 ? -rand_vector : rand_vector);
 	}
 }

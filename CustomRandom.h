@@ -11,6 +11,7 @@ public:
 
 	double Generate();
 	double Generate(double num);
+	double GenerateAngle(double angle);
 };
 
 

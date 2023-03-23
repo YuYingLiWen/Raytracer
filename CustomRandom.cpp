@@ -1,4 +1,5 @@
 #include "CustomRandom.h"
+#include "YuMath.h"
 
 #include <random>
 
@@ -22,7 +23,13 @@ double CustomRandom::Generate()
 
 double CustomRandom::Generate(double num)
 {
-	double result = ((float)rand() / (float)RAND_MAX) * num * 2.0f - num;
-	return result;
+	return ((float)rand() / (float)RAND_MAX) * num * 2.0f - num;
+}
+
+// Returns: angle in radian
+double CustomRandom::GenerateAngle(double angle)
+{
+	// Goes from 0 to angle.
+	return ((float)rand() / (float)RAND_MAX) * angle * Deg2Rad;
 }
 
