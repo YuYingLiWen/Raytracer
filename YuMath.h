@@ -41,7 +41,7 @@ Vector3d Reflect(const Vector3d& normal, const Vector3d& inverse);
 
 Vector3d ReflectRand(const Vector3d& normal, const Vector3d& inverse, const float rand_num);
 
-Vector3d RandomDir(const Vector3d& normal, CustomRandom& rng);
+Vector3d RandomDir(const Vector3d& normal);
 
 #endif
 

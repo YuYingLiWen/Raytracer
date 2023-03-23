@@ -14,7 +14,7 @@ private:
 	Camera();
 public:
 
-	static Camera* GetInstance();
+	static Camera& GetInstance();
 
 	void SetData(const Output& output, float resolution_factor);
 

@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CustomRandom.cpp" />
     <ClCompile Include="JSONReader.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="RayTracer.cpp" />

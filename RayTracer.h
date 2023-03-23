@@ -87,7 +87,7 @@ public:
     { 
         PRINT("Setting the camera...");
 
-        Camera::GetInstance()->SetData(*scene->GetOuput(), 1.0f);
+        Camera::GetInstance().SetData(*scene->GetOuput(), 1.0f);
     }
 
     /// Starts tracing the scene
@@ -117,7 +117,7 @@ public:
     Vector3d GetNormal(const Ray& ray);
 
 private: 
-    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, CustomRandom& rng, bool gl);
+    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool gl);
 };
 
 

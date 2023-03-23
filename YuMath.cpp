@@ -68,12 +68,12 @@ Vector3d ReflectRand(const Vector3d& normal, const Vector3d& inverse, const floa
 	return 2.0f * (normal * inverse.dot(normal) * rand_num) - inverse;
 }
 
-Vector3d RandomDir(const Vector3d& normal, CustomRandom& rng)
+Vector3d RandomDir(const Vector3d& normal)
 {
 	//Note that rand_num needs to be between 
 	// inverse as in the inverse vector that hits the base of the normal vector
 
-	Vector3d rand_vector(rng.Generate(1.0f), rng.Generate(1.0f), rng.Generate(1.0f));
+	Vector3d rand_vector(CustomRandom::GetInstance().Generate(1.0f), CustomRandom::GetInstance().Generate(1.0f), CustomRandom::GetInstance().Generate(1.0f));
 	rand_vector.normalize();
 
 	float cos_angle= normal.dot(rand_vector);

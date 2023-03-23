@@ -1,25 +1,16 @@
 #ifndef RANDOM_H
-
-#include <random>
+#define RANDOM_H
 
 class CustomRandom
 {
+private:
+	CustomRandom();
 public:
-	CustomRandom() 
-	{
-		std::srand((unsigned int)std::time(nullptr)); // seeds the RNG
-	}
 
-	double Generate()
-	{
-		return (float)rand() / (float)RAND_MAX;
-	}
+	static CustomRandom& GetInstance();
 
-	double Generate(double num) 
-	{ 
-		double result = ((float)rand() / (float)RAND_MAX) * num * 2.0f - num;
-		return result; 
-	}
+	double Generate();
+	double Generate(double num);
 };
 
 

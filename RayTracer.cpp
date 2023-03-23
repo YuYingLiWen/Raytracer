@@ -144,9 +144,9 @@ Color RayTracer::GetSpecularColor(Ray& ray)
     //auto opposite = incoming - adjacent;
     //Vector3d reflect =  adjacent - opposite ;
 
-    Camera* cam = Camera::GetInstance();
+;
 
-    Vector3d towards_camera = cam->Position() - *ray.hit_coor;
+    Vector3d towards_camera = Camera::GetInstance().Position() - *ray.hit_coor;
     Color specular;
 
     Vector3d hit_normal = GetNormal(ray);
@@ -251,7 +251,7 @@ Color RayTracer::GetDiffuseColor(Ray& ray, bool gl = true)
     return diffuse;
 }
 
-void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, CustomRandom& rng, bool gl)
+void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool gl)
 {
     Vector3d hit_normal = GetNormal(ray);
 
@@ -279,8 +279,8 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
     hit_count++;
     
     if (!gl // Not using global illum
-        || hit_count >= Camera::GetInstance()->MaxBounce()
-        || rng.Generate() <= Camera::GetInstance()->ProbeTerminate())
+        || hit_count >= Camera::GetInstance().MaxBounce()
+        || CustomRandom::GetInstance().Generate() <= Camera::GetInstance().ProbeTerminate())
     {
         if (filtered_hits.size() > 0) diffuse += Color::Black();
         else
@@ -297,12 +297,12 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
     }
 
     //// Find next bounce
-    Vector3d new_direction = RandomDir(hit_normal, rng); // Reflect(GetNormal(ray), -ray.direction);
+    Vector3d new_direction = RandomDir(hit_normal); // Reflect(GetNormal(ray), -ray.direction);
 
     Ray next_ray(*ray.hit_coor,new_direction);
     
     if (Raycast(next_ray))
-        Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, diffuse, hit_count, rng, gl);
+        Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, diffuse, hit_count, gl);
     else
         return;
 }
@@ -312,8 +312,7 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const 
     unsigned int hit_count = 0;
     Color diffuse;
 
-    CustomRandom rng;
-    Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, diffuse, hit_count, rng, gl);
+    Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, diffuse, hit_count, gl);
 
     return diffuse/hit_count;
 }
@@ -324,12 +323,11 @@ Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const 
 
 void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse)
 {
-    Camera* camera = Camera::GetInstance();
-    const double grid_size = camera->GridSize();
+;
+    const double grid_size = Camera::GetInstance().GridSize();
     const double sample_size = 1;//camera->SampleSize();
-    const Color ai = camera->AmbientIntensity();
 
-    const double subpixel_center = camera->PixelCenter() / grid_size;
+    const double subpixel_center = Camera::GetInstance().PixelCenter() / grid_size;
     const double total_samples = grid_size * grid_size * sample_size;
 
     //Scanline for each row -> column
@@ -337,17 +335,17 @@ void RayTracer::UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Co
     {
         for (uint16_t grid_x = 0; grid_x < grid_size; grid_x++) // Samples area color around the current pixel
         {
-            Vector3d sub_px = px + (camera->PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center) * camera->Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-            Vector3d sub_py = py + (camera->PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * camera->Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-            Vector3d subpixel_shoot_at = camera->OriginLookAt() + sub_px + sub_py;
+            Vector3d sub_px = px + (Camera::GetInstance().PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center) * Camera::GetInstance().Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            Vector3d sub_py = py + (Camera::GetInstance().PixelCenter() - (2.0f * grid_y + 1.0f) * subpixel_center) * Camera::GetInstance().Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            Vector3d subpixel_shoot_at = Camera::GetInstance().OriginLookAt() + sub_px + sub_py;
 
-            Ray ray = camera->MakeRay(subpixel_shoot_at);
+            Ray ray = Camera::GetInstance().MakeRay(subpixel_shoot_at);
 
             if (Raycast(ray))
             {
                 for (uint16_t sample = 0; sample < sample_size; sample++)
                 {
-                    out_final_ambient += GetAmbientColor(ray) * ai;
+                    out_final_ambient += GetAmbientColor(ray) * Camera::GetInstance().AmbientIntensity();
 
                     out_final_diffuse += GetDiffuseColor(ray);
                 }
@@ -387,14 +385,13 @@ void RayTracer::Trace()
 {
     PRINT("Tracing...");
 
-    CustomRandom rng;
-
-    Camera* camera = Camera::GetInstance();
 
     // Caching lots to precomputed data before casting rays.
     auto& output = scene->GetOuput();
 
-    auto& output_buffer = camera->GetOutputBuffer();
+    Camera& camera = Camera::GetInstance();
+
+    auto& output_buffer = camera.GetOutputBuffer();
 
     size_t buffer_size = output_buffer.size();
 
@@ -406,21 +403,21 @@ void RayTracer::Trace()
     bool use_specular =  !output->HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
-    for (uint32_t y = 0; y < camera->Height(); y++)
+    for (uint32_t y = 0; y < camera.Height(); y++)
     {
         //std::cout << std::endl;
-        for (uint32_t x = 0; x < camera->Width() ; x++)
+        for (uint32_t x = 0; x < camera.Width() ; x++)
         {
             Color final_ambient;
             Color final_diffuse;
             Color final_specular;
 
-            px = (camera->ScaledPixel() - (2.0f * x + 1.0f) * camera->PixelCenter()) * camera->Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
-            py = (camera->HalfImage() - (2.0f * y + 1.0f) * camera->PixelCenter()) * camera->Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            px = (camera.ScaledPixel() - (2.0f * x + 1.0f) * camera.PixelCenter()) * camera.Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
+            py = (camera.HalfImage() - (2.0f * y + 1.0f) * camera.PixelCenter()) * camera.Up(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
 
-            Vector3d pixel_shoot_at = camera->OriginLookAt() + px + py;
+            Vector3d pixel_shoot_at = camera.OriginLookAt() + px + py;
 
-            Ray ray = camera->MakeRay(pixel_shoot_at);
+            Ray ray = camera.MakeRay(pixel_shoot_at);
             bool hit = Raycast(ray);
 
             if (use_AA)
@@ -432,7 +429,7 @@ void RayTracer::Trace()
                 if (hit)
                 {
                     final_diffuse = GetDiffuseColor(ray, false);
-                    final_ambient = GetAmbientColor(ray) * camera->AmbientIntensity();
+                    final_ambient = GetAmbientColor(ray) * camera.AmbientIntensity();
                 }
                 else
                 {
@@ -453,14 +450,14 @@ void RayTracer::Trace()
 void RayTracer::SaveToPPM()
 {
     
-    Camera* camera = Camera::GetInstance();
+    Camera& camera = Camera::GetInstance();
 
     PRINT("Saving output as " + scene->GetOuput()->GetFileName() + ".");
 
     std::ofstream ofs(".\\outputs\\" + scene->GetOuput()->GetFileName(), std::ios_base::out | std::ios_base::binary);
-    ofs << "P6" << std::endl << camera->Width() << ' ' << camera->Height() << std::endl << "255" << std::endl;
+    ofs << "P6" << std::endl << camera.Width() << ' ' << camera.Height() << std::endl << "255" << std::endl;
 
-    auto& buffer = camera->GetOutputBuffer();
+    auto& buffer = camera.GetOutputBuffer();
     size_t size = buffer.size();
 
     for (uint32_t i = 0; i < size; i++) {

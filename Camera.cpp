@@ -1,13 +1,12 @@
 #include "Camera.h"
 
 
-Camera* Camera::instance = nullptr;
 
 Camera::Camera() {};
 
-Camera* Camera::GetInstance()
+Camera& Camera::GetInstance()
 {
-	if (instance == nullptr) instance = new Camera();
+	static Camera instance;
 
 	return instance;
 }
@@ -41,7 +40,6 @@ void Camera::SetData(const Output& output, float resolution_factor = 1.0f)
 Camera::~Camera()
 {
 	delete ppm_buffer;
-	delete instance;
 }
 
 Ray Camera::MakeRay(Vector3d& destination) const
