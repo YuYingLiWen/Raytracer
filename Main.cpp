@@ -17,14 +17,14 @@ int main()
     //std::string files[] = {"cornell_box_empty_pl"};
     //std::string files[] = {"cornell_box"};
     //std::string files[] = { "test_scene1" };
-    std::string files[] = { "test_area_light1" };
+    //std::string files[] = { "test_area_light1" };
     //std::string files[] = { "test_scene1B" };
     //std::string files[] = { "test_scene3B" };
 
     //std::string files[] = { "test_scene3B","test_scene3"};
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
-    //std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
+    std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
     //std::string files[] = { "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
 
     //std::string files[] = {"test_scene2"};
@@ -53,6 +53,6 @@ int main()
         PRINT("Elapsed: " << ((float)(clock() - time) / CLOCKS_PER_SEC) << " seconds OR " << ((float)(clock() - time) / CLOCKS_PER_SEC / 60.0f) << " minutes.");
 
     }
-
+    PRINT("\n>> END OF TASKS << ");
     std::cin.get();
 }

@@ -26,6 +26,8 @@ extern void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& li
 extern void JSONReadOutput(Output& scene_output, nlohmann::json& output);
 
 
+static const float RESOLUTION = 1.00f;
+
 using namespace Eigen;
 struct Hit;
 
@@ -36,64 +38,27 @@ private:
     Scene scene;
 
 public:
-    RayTracer(nlohmann::json json_file)
-        :json_file(json_file)
-    {
-        PRINT("JSON file acquired!");
-    }
+    RayTracer() = delete;
+    RayTracer(nlohmann::json json_file);
 
-    ~RayTracer() 
-    {
-    }
+    ~RayTracer();
 
     /// Main function that starts the tracer.
-    void run()
-    {
-        // Each ray is a thread.
-        // Count the number of rays to shoot
-        // if count == size then it is done.
-        // Save to file or wtv
+    void run();
 
-        BuildScene();
-        SetupCamera();
-        Trace();
-        SaveToPPM();
-    }
-
+private: 
     /// Builds scene from json file
-    void BuildScene()
-    {
-        PRINT("Building scene...");
+    void BuildScene();
 
-        nlohmann::json geo = json_file.at("geometry");
-        nlohmann::json light = json_file.at("light");
-        nlohmann::json output = json_file.at("output");
-
-        JSONReadGeometries(scene.GetGeometries(), geo);
-        JSONReadLights(scene.GetLights(), light);
-        JSONReadOutput(scene.GetOuput(), output);
-
-        //#if _DEBUG
-        //        scene->PrintGeometries();
-        //        scene->PrintLights();
-        //        scene->PrintOutput();
-        //#endif
-    }
-
-    void SetupCamera() 
-    { 
-        PRINT("Setting the camera...");
-
-        Camera::GetInstance().SetData(scene.GetOuput(), 1.00f);
-    }
+    void SetupCamera();
 
     /// Starts tracing the scene
     void Trace();
     /// Save current scene data as .ppm file.
     void SaveToPPM();
-    
+
     // Saves which closest object to ray origin is hit, or nothing is hit.
-    bool Raycast(Ray& ray, double max_distance);
+    bool Raycast(Ray& ray, double max_distance = DBL_MAX);
 
     // Returns an array of object that ray intersected with.
     std::vector<Hit> RaycastAll(const Ray& ray, double max_distance);
@@ -102,19 +67,23 @@ public:
     bool IntersectCoor(const Ray& ray, Sphere& sphere, Vector3d& intersect);
     bool IntersectCoor(const Ray& ray, Rectangle& rect, Vector3d& intersect);
 
-    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity,  Ray& ray, bool& gl);
+    Color CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, const Ray& ray, bool& gl);
 
-    Color GetDiffuseColor(Ray& ray, bool gl);
-    Color GetSpecularColor(Ray& ray);
+    Color GetDiffuseColor(const Ray& ray, bool gl);
+    Color GetSpecularColor(const Ray& ray);
 
     Color GetAmbientColor(const Ray& ray);
 
-    void UseMSAA(Vector3d& px, Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse);
+    bool IsLightHidden(const Vector3d& light_center, const Ray& ray);
+
+    double BlinnPhong(const Vector3d& normal, const Vector3d& towards_light, const Vector3d& towards_camera);
+
+    void UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse);
 
     Vector3d GetNormal(const Ray& ray);
 
-private: 
-    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, Ray& ray, Color& diffuse, unsigned int& hit_count, bool& gl);
+
+    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, const Ray& ray, Color& diffuse, unsigned int& hit_count, bool& gl);
 };
 
 
