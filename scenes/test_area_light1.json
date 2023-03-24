@@ -1,7 +1,6 @@
 {
     "geometry":[{
-      "type": "rectangle",
-        "comment" :  "floor",
+        "type":"rectangle",
         "p1":[-20, -1, 0],
         "p2":[20, -1, 0],
         "p3":[20, -1, -20],
@@ -19,21 +18,20 @@
         "pc":10
     
     },
-      {
-        "type": "sphere",
-        "comment": "sphere",
-        "centre": [ 0, 0, -4 ],
-        "radius": 1,
-        "ac": [ 1, 1, 1 ],
-        "dc": [ 0, 0, 1 ],
-        "sc": [ 1, 1, 1 ],
-
-        "ka": 0,
-        "kd": 1,
-        "ks": 1,
-        "pc": 100
-
-      }
+        {
+            "type":"sphere",
+            "centre":[0, 0, -4],
+            "radius":1,
+            "ac":[1,1,1],
+            "dc":[0,0,1],
+            "sc":[1,1,1],
+            
+            "ka":0,
+            "kd":1,
+            "ks":1,
+            "pc":100
+        
+        }
     
     ],
     "light":[

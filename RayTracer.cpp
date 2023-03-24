@@ -136,8 +136,6 @@ Color RayTracer::GetSpecularColor(Ray& ray)
     //auto opposite = incoming - adjacent;
     //Vector3d reflect =  adjacent - opposite ;
 
-
-
     Vector3d towards_camera = Camera::GetInstance().Position() - ray.GetHitCoor();
     Color specular;
 
@@ -151,7 +149,34 @@ Color RayTracer::GetSpecularColor(Ray& ray)
         {
             PointLight& point = *(PointLight*)light;
 
-            Vector3d towards_light = point.GetCenter() - ray.GetHitCoor();
+            Vector3d towards_light = (point.GetCenter() - ray.GetHitCoor());
+            double towards_light_distance = towards_light.norm();
+            towards_light.normalize();
+
+            Ray ray_towards_light(ray.GetHitCoor(), towards_light);
+
+            auto hits = RaycastAll(ray_towards_light, towards_light_distance);
+            std::vector<Hit> filtered_hits;
+
+            // Filter out objects that are not in between light & hit
+            for (Hit& hit : hits)
+            {
+                double to_light_dist = (hit.point - point.GetCenter()).norm();
+                double to_hit_coor_dist = (hit.point - ray.GetHitCoor()).norm();
+
+                if (to_light_dist > 0.001f  // Object is embedded in light
+                    && to_hit_coor_dist > 0.001f // Object is hit coordinate
+                    && to_light_dist <= towards_light_distance) // object is behind hit coor
+                {
+                    filtered_hits.push_back(hit);
+                }
+            }
+            
+            if (filtered_hits.size() > 0)
+            {
+                specular += Color::Black();
+                continue;
+            }
 
             //Phong
             //Vector3d reflect = Reflect(hit_normal, towards_light);
@@ -160,6 +185,7 @@ Color RayTracer::GetSpecularColor(Ray& ray)
             //Blinn-Phong
             Vector3d half_vector = (towards_light.normalized() + towards_camera.normalized()).normalized();
             double cos_angle = hit_normal.dot(half_vector);
+
 
             if (cos_angle < 0.0f) continue;
 
@@ -176,10 +202,37 @@ Color RayTracer::GetSpecularColor(Ray& ray)
 
             for (Vector3d& point : hit_points)
             {
-                Vector3d towards_light = point - ray.GetHitCoor();
+                Vector3d towards_light = (point - ray.GetHitCoor());
+                double towards_light_distance = towards_light.norm();
+                towards_light.normalize();
+
+                Ray ray_towards_light(ray.GetHitCoor(), towards_light);
+
+                auto hits = RaycastAll(ray_towards_light, towards_light_distance);
+                std::vector<Hit> filtered_hits;
+
+                // Filter out objects that are not in between light & hit
+                for (Hit& hit : hits)
+                {
+                    double to_light_dist = (hit.point - point).norm();
+                    double to_hit_coor_dist = (hit.point - ray.GetHitCoor()).norm();
+
+                    if (to_light_dist > 0.001f  // Object is embedded in light
+                        && to_hit_coor_dist > 0.001f // Object is hit coordinate
+                        && to_light_dist <= towards_light_distance) // object is behind hit coor
+                    {
+                        filtered_hits.push_back(hit);
+                    }
+                }
+
+                if (filtered_hits.size() > 0)
+                {
+                    specular += Color::Black();
+                    continue;
+                }
 
                 //Phong
-                //Vector3d reflect = Reflect(hit_normal, towards_light);
+                //Vector3d reflect = YuMath::Reflect(hit_normal, towards_light);
                 //double cos_angle = towards_camera.dot(reflect) / (towards_camera.norm() * reflect.norm());
 
                 //Blinn-Phong
@@ -247,10 +300,12 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
 {
     Vector3d hit_normal = GetNormal(ray);
 
-    Vector3d towards_light = light_center - ray.GetHitCoor();
+    Vector3d towards_light = (light_center - ray.GetHitCoor());
+    double towards_light_distance = towards_light.norm();
+    towards_light.normalize();
+
     Ray ray_towards_light(ray.GetHitCoor(), towards_light);
 
-    double towards_light_distance = towards_light.norm();
     auto hits = RaycastAll(ray_towards_light, towards_light_distance);
     std::vector<Hit> filtered_hits;
 
@@ -280,7 +335,7 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
         }
         else
         {
-            double cos_angle = towards_light.dot(hit_normal) / (towards_light_distance * hit_normal.norm());
+            double cos_angle = towards_light.dot(hit_normal);// / (towards_light_distance * hit_normal.norm());
 
             if (cos_angle < 0.0f) cos_angle = 0.0f;
 
@@ -387,7 +442,7 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = true; //!(output->HasGlobalIllumination() || scene.HasAreaLight()); // If scene has GL or AreaL then no AA 
+    bool use_AA = false; //!(output->HasGlobalIllumination() || scene.HasAreaLight()); // If scene has GL or AreaL then no AA 
     bool use_specular =  !output.HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
