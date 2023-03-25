@@ -32,9 +32,13 @@ RayTracer::~RayTracer() {}
 void RayTracer::run()
 {
     BuildScene();
-    SetupCamera();
-    Trace();
-    SaveToPPM();
+
+    for (Output* output : scene.GetOutputs())
+    {
+        SetupCamera(*output);
+        Trace(*output);
+        SaveToPPM(*output);
+    }
 }
 
 /// Builds scene from json file
@@ -48,7 +52,7 @@ void RayTracer::BuildScene()
 
     JSONReadGeometries(scene.GetGeometries(), geo);
     JSONReadLights(scene.GetLights(), light);
-    JSONReadOutput(scene.GetOuput(), output);
+    JSONReadOutput(scene.GetOutputs(), output);
 
     //#if _DEBUG
     //        scene->PrintGeometries();
@@ -57,19 +61,15 @@ void RayTracer::BuildScene()
     //#endif
 }
 
-void RayTracer::SetupCamera()
+void RayTracer::SetupCamera(const Output& output)
 {
     PRINT("Setting the camera...");
-
-    Camera::GetInstance().SetData(scene.GetOuput(), RESOLUTION);
+    Camera::GetInstance().SetData(output, RESOLUTION);
 }
 
-void RayTracer::Trace()
+void RayTracer::Trace(const Output& output)
 {
     PRINT("Tracing...");
-
-    // Caching lots to precomputed data before casting rays.
-    auto& output = scene.GetOuput();
 
     Camera& camera = Camera::GetInstance();
 
@@ -81,14 +81,14 @@ void RayTracer::Trace()
 
     uint32_t counter = 0;
 
-    bool use_AA = false; //!(output->HasGlobalIllumination() || scene.HasAreaLight()); // If scene has GL or AreaL then no AA 
-    bool use_specular =  !output.HasGlobalIllumination(); // If scene has GL then no specular light
+    bool use_AA = (output.HasGlobalIllumination() || output.AntiAliase()) && !scene.HasAreaLight(); // If scene has GL or AreaL then no AA 
+    bool use_specular = !output.HasGlobalIllumination(); // If scene has GL then no specular light
 
     // For each height, trace its row
     for (uint32_t y = 0; y < camera.Height(); y++)
     {
         //std::cout << std::endl;
-        for (uint32_t x = 0; x < camera.Width() ; x++)
+        for (uint32_t x = 0; x < camera.Width(); x++)
         {
             Color final_ambient;
             Color final_diffuse;
@@ -105,7 +105,7 @@ void RayTracer::Trace()
             {
                 if (use_AA)
                 {
-                    UseMSAA(px, py, final_ambient, final_diffuse);
+                    UseMSAA(px, py, final_ambient, final_diffuse, output, output.HasGlobalIllumination());
                 }
                 else // No AA
                 {
@@ -117,7 +117,7 @@ void RayTracer::Trace()
             }
             else
             {
-                final_ambient = scene.GetOuput().GetBgColor();
+                final_ambient = output.GetBgColor();
             }
 
             output_buffer[counter] = (final_ambient * camera.AmbientIntensity() + final_diffuse + final_specular).Clamp();
@@ -125,15 +125,22 @@ void RayTracer::Trace()
             counter++;
         }
     }
+
+
 }
 
-void RayTracer::SaveToPPM()
+void RayTracer::SaveToPPM(const Output& output)
 {
     Camera& camera = Camera::GetInstance();
 
-    PRINT("Saving output as " + scene.GetOuput().GetFileName() + ".");
+    PRINT("Saving output as " + output.GetFileName() + ".");
 
-    std::ofstream ofs(".\\outputs\\" + scene.GetOuput().GetFileName(), std::ios_base::out | std::ios_base::binary);
+#if STUDENT_SOLUTION || COURSE_SOLUTION
+    std::ofstream ofs(output.GetFileName(), std::ios_base::out | std::ios_base::binary);
+#else
+    std::ofstream ofs(".\\outputs\\" + output.GetFileName(), std::ios_base::out | std::ios_base::binary);
+#endif
+
     ofs << "P6" << std::endl << camera.Width() << ' ' << camera.Height() << std::endl << "255" << std::endl;
 
     auto& buffer = camera.GetOutputBuffer();
@@ -470,13 +477,13 @@ bool RayTracer::IsLightHidden(const Vector3d& light_center, const Ray& ray)
 }
 
 
-void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse)
+void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, const Output& output, const bool& gl)
 {
     const double grid_size = Camera::GetInstance().GridSize();
     const double sample_size = Camera::GetInstance().SampleSize();
 
     const double subpixel_center = Camera::GetInstance().PixelCenter() / grid_size;
-    const double total_samples = grid_size * grid_size;// *sample_size;
+    const double total_samples = grid_size * grid_size * sample_size;
 
     const double subpixel_size = subpixel_center + subpixel_center;
 
@@ -493,17 +500,15 @@ void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final
 
                 Ray ray = Camera::GetInstance().MakeRay(subpixel_shoot_at);
 
-                Color samp_ambient, samp_diff;
-
                 if (Raycast(ray))
                 {
                     out_final_ambient += GetAmbientColor(ray) * Camera::GetInstance().AmbientIntensity();
 
-                    out_final_diffuse += GetDiffuseColor(ray);
+                    out_final_diffuse += GetDiffuseColor(ray, gl);
                 }
                 else
                 {
-                    out_final_ambient += scene.GetOuput().GetBgColor();
+                    out_final_ambient += output.GetBgColor();
                 }
             }
         }

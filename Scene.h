@@ -18,21 +18,29 @@ private:
 
     std::vector<Geometry*> geometries;
     std::vector<Light*> lights;
-    Output output;
+    std::vector<Output*> outputs;
 
 public:
 
     Scene() {}
-    ~Scene() {}
+    ~Scene() 
+    {
+        for (auto geo : geometries) delete geo;
+        for (auto light : lights) delete light;
+        for (auto output : outputs) delete output;
+    }
 
     auto& GetGeometries() { return geometries; }
     auto& GetLights() { return lights; }
-    auto& GetOuput() { return output; }
+    auto& GetOutputs() { return outputs; }
 
     bool HasAreaLight() {
         for (Light* l: lights)
         {
-            if (l->GetType().compare(AREA_LIGHT) == 0) return true;
+            if (l->GetType().compare(AREA_LIGHT) == 0)
+            {
+                if(!(*(AreaLight*)l).GetUseCenter()) return true;
+            }
         }
         return false;
     }

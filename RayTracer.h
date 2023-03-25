@@ -23,7 +23,7 @@
 
 extern void JSONReadGeometries(std::vector<Geometry*>& scene_geo, nlohmann::json& geometries);
 extern void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& lights);
-extern void JSONReadOutput(Output& scene_output, nlohmann::json& output);
+extern void JSONReadOutput(std::vector<Output*>& scene_outputs, nlohmann::json& output);
 
 
 static const float RESOLUTION = 1.00f;
@@ -50,12 +50,12 @@ private:
     /// Builds scene from json file
     void BuildScene();
 
-    void SetupCamera();
+    void SetupCamera(const Output& output);
 
     /// Starts tracing the scene
-    void Trace();
+    void Trace(const Output& output);
     /// Save current scene data as .ppm file.
-    void SaveToPPM();
+    void SaveToPPM(const Output& output);
 
     // Saves which closest object to ray origin is hit, or nothing is hit.
     bool Raycast(Ray& ray, double max_distance = DBL_MAX);
@@ -78,7 +78,7 @@ private:
 
     double BlinnPhong(const Vector3d& normal, const Vector3d& towards_light, const Vector3d& towards_camera);
 
-    void UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse);
+    void UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, const Output& output, const bool& gl);
 
     Vector3d GetNormal(const Ray& ray);
 

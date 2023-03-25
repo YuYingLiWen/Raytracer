@@ -24,9 +24,10 @@ struct OutputData
     Eigen::Vector2i* rays_per_pixel = nullptr;
     uint8_t* max_bounce = nullptr;
     double* probe_terminate = nullptr; //?? wats this thing??
+    bool antialiasing = false;
 };
 
-/// The "camera"
+
 class Output
 {
 public:
@@ -54,6 +55,7 @@ public:
         fov = data.fov;
 
         global_illum = data.global_illum;
+        anti_aliase = data.antialiasing;
         rays_per_pixel = data.rays_per_pixel;
         max_bounce = data.max_bounce;
         probe_terminate = data.probe_terminate;
@@ -75,7 +77,8 @@ public:
     
     inline auto GetGlobalIllum() { return global_illum; }
     inline auto GetMaxBounce() { return max_bounce; }
-    inline auto GetProbeTerminate() { return probe_terminate; } //?? wats this thing??
+    inline auto GetProbeTerminate() { return probe_terminate; }
+    inline auto AntiAliase() const { return anti_aliase; }
 
     // Might need modification due to info from assignment docs
     inline auto GetRaysPerPixel() { return rays_per_pixel; }
@@ -117,8 +120,9 @@ private:
     bool* global_illum = nullptr;
     Eigen::Vector2i* rays_per_pixel = nullptr;
     uint8_t* max_bounce = nullptr;
-    double* probe_terminate = nullptr; //?? wats this thing??
+    double* probe_terminate = nullptr; 
     bool contains_area_light = false;
+    bool anti_aliase = false;
 };
 
 #endif

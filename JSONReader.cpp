@@ -103,7 +103,7 @@ void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& lights)
                 points[i] = Vector3d((double)val_p.at(0), (double)val_p.at(1), (double)val_p.at(2));
             }
 
-            bool use_center = (JSONGetValue(value, "usecenter") != nullptr) ? (bool)JSONGetValue(value, "usecenter") : true;
+            bool use_center = (JSONGetValue(value, "usecenter") != nullptr) ? (bool)JSONGetValue(value, "usecenter") : false;
 
             AreaLight* area = new AreaLight(type, id, is, points[0], points[1], points[2], points[3], use_center);
 
@@ -125,37 +125,45 @@ void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& lights)
     }
 }
 
-void JSONReadOutput(Output& scene_output, nlohmann::json& output)
+void JSONReadOutput(std::vector<Output*>& scene_outputs, nlohmann::json& outputs)
 {
-    nlohmann::json value = output.at(0);
-
-    OutputData data;
-
-    // Mandatory
-    auto& val_look = value.at("lookat");
-    auto& val_up = value.at("up");
-    auto& val_bkc = value.at("bkc");
-    auto& val_ai = value.at("ai");
-    auto& val_size = value.at("size");
-    auto& val_center = value.at("centre");
-
-    data.file_name = (std::string)value.at("filename");
-    data.fov = (float)value.at("fov");
-    data.ai = Color(val_ai.at(0), val_ai.at(1), val_ai.at(2));
-    data.bkc = Color(val_bkc.at(0), val_bkc.at(1), val_bkc.at(2));
-    data.size = Vector2i(val_size.at(0), val_size.at(1));
-    data.up = Vector3d(val_up.at(0), val_up.at(1), val_up.at(2));
-    data.look_at = Vector3d(val_look.at(0), val_look.at(1), val_look.at(2));
-    data.center = Vector3d(val_center.at(0), val_center.at(1), val_center.at(2));
-
-    if (JSONGetValue(value, "globalillum") != nullptr) data.global_illum = new bool(JSONGetValue(value, "globalillum"));
-    if (JSONGetValue(value, "probterminate") != nullptr) data.probe_terminate = new double(JSONGetValue(value, "probterminate"));
-    if (JSONGetValue(value, "maxbounces") != nullptr) data.max_bounce = new uint8_t(JSONGetValue(value, "maxbounces"));
-    if (JSONGetValue(value, "raysperpixel") != nullptr)
+    for (auto& item : outputs.items())
     {
-        auto val_ray_per_pixel = JSONGetValue(value, "raysperpixel");
-        data.rays_per_pixel = new Vector2i(val_ray_per_pixel.at(0), val_ray_per_pixel.at(1));
-    }
 
-    scene_output.Set(data);
+        nlohmann::json value = item.value();
+
+        OutputData data;
+
+        // Mandatory
+        auto& val_look = value.at("lookat");
+        auto& val_up = value.at("up");
+        auto& val_bkc = value.at("bkc");
+        auto& val_ai = value.at("ai");
+        auto& val_size = value.at("size");
+        auto& val_center = value.at("centre");
+
+        data.file_name = (std::string)value.at("filename");
+        data.fov = (float)value.at("fov");
+        data.ai = Color(val_ai.at(0), val_ai.at(1), val_ai.at(2));
+        data.bkc = Color(val_bkc.at(0), val_bkc.at(1), val_bkc.at(2));
+        data.size = Vector2i(val_size.at(0), val_size.at(1));
+        data.up = Vector3d(val_up.at(0), val_up.at(1), val_up.at(2));
+        data.look_at = Vector3d(val_look.at(0), val_look.at(1), val_look.at(2));
+        data.center = Vector3d(val_center.at(0), val_center.at(1), val_center.at(2));
+
+        if (JSONGetValue(value, "globalillum") != nullptr) data.global_illum = new bool(JSONGetValue(value, "globalillum"));
+        if (JSONGetValue(value, "antialiasing") != nullptr) data.antialiasing = (bool)(JSONGetValue(value, "antialiasing"));
+        if (JSONGetValue(value, "probterminate") != nullptr) data.probe_terminate = new double(JSONGetValue(value, "probterminate"));
+        if (JSONGetValue(value, "maxbounces") != nullptr) data.max_bounce = new uint8_t(JSONGetValue(value, "maxbounces"));
+        if (JSONGetValue(value, "raysperpixel") != nullptr)
+        {
+            auto val_ray_per_pixel = JSONGetValue(value, "raysperpixel");
+            data.rays_per_pixel = new Vector2i(val_ray_per_pixel.at(0), val_ray_per_pixel.at(1));
+        }
+
+        Output* output = new Output();
+        output->Set(data);
+        
+        scene_outputs.push_back(output);
+    }
 }

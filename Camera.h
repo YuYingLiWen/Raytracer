@@ -28,6 +28,8 @@ public:
 
 	std::vector<Color>& GetOutputBuffer();
 
+	void ResetOuputBuffer();
+
 	uint16_t Height() const;
 	uint16_t Width() const;					
 	double AspectRatio() const;			

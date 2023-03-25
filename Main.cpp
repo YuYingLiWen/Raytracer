@@ -15,7 +15,8 @@ Scene* LoadScene(std::string&);
 int main()
 {
     //std::string files[] = {"cornell_box_empty_pl"};
-    //std::string files[] = {"cornell_box"};
+    std::string files[] = {"cornell_box"};
+    //std::string files[] = { "cornell_box_al" };
     //std::string files[] = { "test_scene1" };
     //std::string files[] = { "test_area_light1" };
     //std::string files[] = { "test_scene1B" };
@@ -24,7 +25,7 @@ int main()
     //std::string files[] = { "test_scene3B","test_scene3"};
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
-    std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
+    //std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B", "cornell_box_al" };
     //std::string files[] = { "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
 
     //std::string files[] = {"test_scene2"};
@@ -34,11 +35,12 @@ int main()
     
     for (std::string& scene_name : files) 
     {
-        std::cout << "==== " << scene_name << " ====" << std::endl;
+        PRINT("==== " << scene_name << " ====");
 
         std::ifstream t("scenes\\" + scene_name + ".json");
-        if (!t) {
-            std::cout << "File " << scene_name << " does not exist!" << std::endl;
+        if (!t) 
+        {
+            PRINT("File " << scene_name << " does not exist!");
             return -1;
         }
 
@@ -53,6 +55,6 @@ int main()
         PRINT("Elapsed: " << ((float)(clock() - time) / CLOCKS_PER_SEC) << " seconds OR " << ((float)(clock() - time) / CLOCKS_PER_SEC / 60.0f) << " minutes.");
 
     }
-    PRINT("\n>> END OF TASKS << ");
+    PRINT("\n>> END OF TASKS <<");
     std::cin.get();
 }

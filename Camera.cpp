@@ -34,6 +34,8 @@ void Camera::SetData(const Output& output, float resolution_factor = 1.0f)
 	max_bounce = output.max_bounce != nullptr ? *output.max_bounce : 0;
 	probe_terminate = output.probe_terminate != nullptr ? *output.probe_terminate : 1.0f;
 
+	delete ppm_buffer;
+
 	ppm_buffer = new std::vector<Color>((size_t)width * (size_t)height);
 }
 
@@ -48,6 +50,11 @@ Ray Camera::MakeRay(Vector3d& destination) const
 }
 
 std::vector<Color>& Camera::GetOutputBuffer() { return *ppm_buffer; }
+
+void Camera::ResetOuputBuffer()
+{
+	//if (ppm_buffer != nullptr) delete ppm_buffer;
+}
 
 uint16_t Camera::Height() const { return height; }
 uint16_t Camera::Width() const { return width; }
