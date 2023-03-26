@@ -144,6 +144,7 @@
     <ClInclude Include="AreaLight.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Color.h" />
+    <ClInclude Include="EigenIncludes.h" />
     <ClInclude Include="external\json.hpp" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="Light.h" />

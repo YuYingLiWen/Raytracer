@@ -25,7 +25,7 @@ int main()
     //std::string files[] = { "test_scene3B","test_scene3"};
 
     //std::string files[] = { "cornell_box_empty_pl", "cornell_box" };
-    std::string files[] = {"cornell_box_empty_pl", "cornell_box", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B", "cornell_box_al" };
+    std::string files[] = { "cornell_box", "cornell_box_empty_pl", "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B", "cornell_box_al" };
     //std::string files[] = { "test_area_light1", "test_scene1", "test_scene1B", "test_scene2", "test_scene3", "test_scene3B" };
 
     //std::string files[] = {"test_scene2"};

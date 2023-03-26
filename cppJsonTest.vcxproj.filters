@@ -83,5 +83,8 @@
     <ClInclude Include="YuMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EigenIncludes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
