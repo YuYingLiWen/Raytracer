@@ -26,7 +26,7 @@ extern void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& li
 extern void JSONReadOutput(std::vector<Output*>& scene_outputs, nlohmann::json& output);
 
 
-static const float RESOLUTION = 1.00f;
+static const float RESOLUTION = 0.50f;
 
 using namespace Eigen;
 struct Hit;
@@ -83,7 +83,7 @@ private:
     Vector3d GetNormal(const Ray& ray);
 
 
-    void Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, const Ray& ray, Color& diffuse, unsigned int& hit_count, bool& gl);
+    Color Helper_CalculatePointLightDiffuse(const Vector3d& center, const Color& diffuse_intensity, const Ray& ray, unsigned int hit_count, bool& gl);
 };
 
 

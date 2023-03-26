@@ -125,8 +125,6 @@ void RayTracer::Trace(const Output& output)
             counter++;
         }
     }
-
-
 }
 
 void RayTracer::SaveToPPM(const Output& output)
@@ -395,23 +393,14 @@ Color RayTracer::GetDiffuseColor(const Ray& ray, bool gl = true)
 
 Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, const Ray& ray, bool& gl)
 {
-    unsigned int hit_count = 1;
-    Color diffuse;
-
-    Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, diffuse, hit_count, gl);
-
-    if (hit_count <= 0) return diffuse;
-    if (gl) diffuse / (hit_count + 4);
-    return diffuse;
+    return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, 1, gl);
 }
 
-void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, const Ray& ray, Color& diffuse, unsigned int& hit_count, bool& gl)
+Color RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, const Ray& ray, unsigned int hit_count, bool& gl)
 {
     Vector3d hit_normal = GetNormal(ray);
 
     Vector3d towards_light = (light_center - ray.GetHitCoor()).normalized();
-
-    hit_count++;
 
     if (!gl // Not using global illum
         || hit_count >= Camera::GetInstance().MaxBounce()
@@ -419,7 +408,7 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
     {
         if (IsLightHidden(light_center, ray))
         {
-            diffuse = Color::Black();
+            return Color::Black();
         }
         else
         {
@@ -428,18 +417,17 @@ void RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, 
             if (cos_angle < 0.0f) cos_angle = 0.0f;
 
             Geometry* geo = ray.hit_obj;
-            diffuse += (geo->GetDiffuseColor() * geo->GetDiffuseCoeff() * light_diffuse_intensity * cos_angle);
+            return (geo->GetDiffuseColor() * geo->GetDiffuseCoeff() * light_diffuse_intensity * cos_angle);
         }
-        return;
     }
 
     //// Find next bounce
     Ray next_ray(ray.GetHitCoor(), YuMath::RandomDir(hit_normal));
 
     if (Raycast(next_ray))
-        Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, diffuse, hit_count, gl);
+        return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, hit_count + 1, gl);
     else
-        return;
+        return Color::Black();
 }
 
 
