@@ -63,7 +63,7 @@ void RayTracer::BuildScene()
 
 void RayTracer::SetupCamera(const Output& output)
 {
-    PRINT("Setting the camera...");
+    PRINT("Setting up the camera...");
     Camera::GetInstance().SetData(output, RESOLUTION);
 }
 
@@ -393,14 +393,12 @@ Color RayTracer::GetDiffuseColor(const Ray& ray, bool gl = true)
 
 Color RayTracer::CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, const Ray& ray, bool& gl)
 {
-    return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, 1, gl);
+    return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, ray, 0, gl);
 }
 
 Color RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center, const Color& light_diffuse_intensity, const Ray& ray, unsigned int hit_count, bool& gl)
 {
     Vector3d hit_normal = GetNormal(ray);
-
-    Vector3d towards_light = (light_center - ray.GetHitCoor()).normalized();
 
     if (!gl // Not using global illum
         || hit_count >= Camera::GetInstance().MaxBounce()
@@ -412,6 +410,8 @@ Color RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center,
         }
         else
         {
+            Vector3d towards_light = (light_center - ray.GetHitCoor()).normalized();
+
             double cos_angle = towards_light.dot(hit_normal);
 
             if (cos_angle < 0.0f) cos_angle = 0.0f;
