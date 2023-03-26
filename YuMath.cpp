@@ -45,7 +45,7 @@ namespace YuMath
 		return -1; // Something went wrong
 	}
 
-	double TriangleArea(const Eigen::Vector3d& p1, const Eigen::Vector3d& p2, const Eigen::Vector3d& p3)
+	double TriangleArea(const Vector3d& p1, const Vector3d& p2, const Vector3d& p3)
 	{
 		return ((p1 - p2).cross(p3 - p2)).norm() * 0.5f;
 	}

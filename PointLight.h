@@ -5,8 +5,7 @@
 #include "Light.h"
 #include <string>
 
-#include "Eigen/Core"
-#include "Eigen/Dense"
+#include "EigenIncludes.h"
 
 #define POINT_LIGHT "point"
 

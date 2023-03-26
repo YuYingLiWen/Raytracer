@@ -4,8 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "Eigen/Core"
-#include "Eigen/Dense"
+#include "EigenIncludes.h"
 
 #include "Color.h"
 

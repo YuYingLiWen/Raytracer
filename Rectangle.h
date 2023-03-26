@@ -3,8 +3,7 @@
 
 #include "Geometry.h"
 
-#include "Eigen/Core"
-#include "Eigen/Dense"
+#include "EigenIncludes.h"
 
 #define RECTANGLE "rectangle"
 

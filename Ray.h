@@ -1,9 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-
-#include "Eigen/Core"
-#include "Eigen/Dense"
+#include "EigenIncludes.h"
 
 #include "Geometry.h"
 #include <cfloat>

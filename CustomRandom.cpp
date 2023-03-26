@@ -2,7 +2,7 @@
 #include "YuMath.h"
 
 #include <random>
-
+#include <ctime>
 
 CustomRandom::CustomRandom()
 {

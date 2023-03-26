@@ -3,7 +3,7 @@
 
 #include "Output.h"
 #include "Ray.h"
-#include "Eigen/Core"
+#include "EigenIncludes.h"
 #include "YuMath.h"
 
 using namespace Eigen;

@@ -1,7 +1,7 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-#include "Eigen/Core"
+#include "EigenIncludes.h"
 
 using namespace Eigen;
 

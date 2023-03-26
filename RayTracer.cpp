@@ -421,13 +421,17 @@ Color RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center,
         }
     }
 
-    //// Find next bounce
-    Ray next_ray(ray.GetHitCoor(), YuMath::RandomDir(hit_normal));
 
-    if (Raycast(next_ray))
-        return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, hit_count + 1, gl);
-    else
-        return Color::Black();
+    //// Find next bounce (Try again)
+    for (size_t i = 0; i < 3; i++) 
+    {
+        Ray next_ray(ray.GetHitCoor(), YuMath::RandomDir(hit_normal));
+
+        if (Raycast(next_ray))
+            return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, hit_count + 1, gl);
+    }
+
+    return Color::Black(); // If all else fails return black.
 }
 
 
@@ -474,7 +478,7 @@ void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final
     const double sample_size = Camera::GetInstance().SampleSize();
 
     const double subpixel_center = Camera::GetInstance().PixelCenter() / (grid_height); // Why height, cause it is the "a" value
-    const double total_samples = grid_height * grid_width * sample_size;
+    const unsigned int total_samples = grid_height * grid_width * sample_size;
 
     const double subpixel_size = subpixel_center + subpixel_center;
 

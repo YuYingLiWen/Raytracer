@@ -1,4 +1,8 @@
-#include "external/json.hpp" //#include "../external/json.hpp"
+#if STUDENT_SOLUTION || COURSE_SOLUTION
+#include "../external/json.hpp"
+#else
+#include "external/json.hpp"
+#endif
 
 #include "AreaLight.h"
 #include "PointLight.h"
