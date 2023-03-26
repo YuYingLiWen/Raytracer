@@ -17,7 +17,7 @@ class AreaLight : public Light
 
 public:
     AreaLight() = delete;
-    AreaLight(std::string type, Color id, Color is, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center)
+    AreaLight(std::string type, Color id, Color is, Eigen::Vector3d& p1, Eigen::Vector3d& p2, Eigen::Vector3d& p3, Eigen::Vector3d& p4, bool use_center, unsigned int n)
         : Light(type, id, is), rectangle(p1,p2,p3,p4), use_center(use_center)
     {
         if (use_center)
@@ -35,38 +35,21 @@ public:
         }
         else // Use the full light
         {
-            // Hit points ~ parallele a and d
-            Vector3d a = p3 - p4;
-            Vector3d d = p2 - p1;
-
-
-            double x = (p2 - p4).norm() / (a - d).norm();
-
-
-            double height = a.norm();
-            double width = d.norm();
-
-            double rate = 0.1f;
-
             double lerp1 = 0.0f;
-            while (true)
+            while (lerp1 < 1.0f)
             {
+                lerp1 = YuMath::Clamp(lerp1 + (1.0f / n), 0.0f, 1.0f);
+
                 Vector3d l1 = YuMath::Lerp(p3, p4, lerp1);
                 Vector3d l2 = YuMath::Lerp(p2, p1, lerp1);
 
-                if (lerp1 >= 1.0f) break;
-
-                lerp1 = YuMath::Clamp(lerp1 + rate, 0.0f, 1.0f);
-
                 double lerp2 = 0.0f;
 
-                while (true)
+                while (lerp2 < 1.0f)
                 {
                     hits_points.push_back(YuMath::Lerp(l1, l2, lerp2));
 
-                    if (lerp2 >= 1.0f) break;
-
-                    lerp2 = YuMath::Clamp(lerp2 + rate, 0.0f, 1.0f);
+                    lerp2 = YuMath::Clamp(lerp2 + (1.0f / n), 0.0f, 1.0f);
                 }
             }
         }

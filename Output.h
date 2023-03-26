@@ -20,11 +20,14 @@ struct OutputData
     Color bkc; // background color 
     float fov = 0.0f;
 
-    bool* global_illum = nullptr;
-    Eigen::Vector2i* rays_per_pixel = nullptr;
-    uint8_t* max_bounce = nullptr;
-    double* probe_terminate = nullptr; //?? wats this thing??
-    bool antialiasing = false;
+    bool global_illum;
+    uint8_t max_bounce;
+    double probe_terminate; 
+    bool antialiasing;
+
+    unsigned int* grid_a = nullptr; // a
+    unsigned int* grid_b = nullptr; // b
+    unsigned int* grid_c = nullptr; // c
 };
 
 
@@ -33,14 +36,14 @@ class Output
 public:
     Output() 
     {
+
     };
 
     ~Output() 
     { 
-        delete global_illum;
-        delete rays_per_pixel;
-        delete max_bounce;
-        delete probe_terminate;
+        delete grid_a;
+        delete grid_b;
+        delete grid_c;
     };
     
     void Set(const OutputData& data)
@@ -56,13 +59,20 @@ public:
 
         global_illum = data.global_illum;
         anti_aliase = data.antialiasing;
-        rays_per_pixel = data.rays_per_pixel;
+        
         max_bounce = data.max_bounce;
         probe_terminate = data.probe_terminate;
+
+        grid_a = data.grid_a;
+        grid_b = data.grid_b;
+        grid_c = data.grid_c;
     }
 
     inline const auto& GetFileName() const { return file_name; }
     inline const auto& GetSize() const { return size; }
+    inline const auto& GetWidth() const { return size.x(); }
+    inline const auto& GetHeight() const { return size.y(); }
+
 
 
     inline const auto& GetAmbientIntensity() const { return ai; }
@@ -70,22 +80,19 @@ public:
 
     inline bool HasGlobalIllumination() const
     { 
-        if (global_illum) return *global_illum;
-        
-        return false;
+        return global_illum;
     }
     
-    inline auto GetGlobalIllum() { return global_illum; }
-    inline auto GetMaxBounce() { return max_bounce; }
-    inline auto GetProbeTerminate() { return probe_terminate; }
+    inline auto GetGlobalIllum() const { return global_illum; }
+    inline auto GetMaxBounce() const { return max_bounce; }
+    inline auto GetProbeTerminate() const { return probe_terminate; }
     inline auto AntiAliase() const { return anti_aliase; }
 
-    // Might need modification due to info from assignment docs
-    inline auto GetRaysPerPixel() { return rays_per_pixel; }
-    inline auto GetMaxRayBounce() { return max_bounce != nullptr ? max_bounce : 0; }
+    inline auto GetMaxRayBounce() const { return max_bounce; }
 
-    inline uint16_t GetRaySampleSize() { return rays_per_pixel != nullptr ? rays_per_pixel->x(): 1; }
-    inline uint16_t GetGridSize() { return rays_per_pixel != nullptr ? rays_per_pixel->y() : 1; }
+    inline unsigned int* GetA() const { return grid_a; }
+    inline unsigned int* GetB() const { return grid_b; }
+    inline unsigned int* GetC() const { return grid_c; }
 
     friend std::ostream& operator << (std::ostream& os, const Output& out)
     {
@@ -97,11 +104,14 @@ public:
             << "FOV: " << out.fov << '\n'
             << "Ambient Intensity: " << out.GetAmbientIntensity() << '\n'
             << "Background Color: " << out.GetBgColor() << '\n'
-            << "Global Illumination: " << (((out.global_illum == nullptr) ? "N/A" : (*out.global_illum == 1) ? "True" : "False")) << '\n'
-            << "Rays per pixels: (" << ((out.rays_per_pixel == nullptr) ? "N/A" :
-                (std::to_string(out.rays_per_pixel->x()) + ", " + std::to_string(out.rays_per_pixel->y()) + ")")) << '\n'
-            << "Max bounce: " << ((out.max_bounce == nullptr) ? "N/A" : std::to_string(*out.max_bounce)) << '\n'
-            << "Probe Termination: " << ((out.probe_terminate == nullptr) ? "N/A" : std::to_string(*out.probe_terminate)) << '\n';
+            << "Global Illumination: " << (out.global_illum == 1 ? "True" : "False") << '\n'
+            << "Rays per pixels: (" 
+                      << (out.grid_a != nullptr ? std::to_string(*out.grid_a): "N/A" )
+                + ", " + (out.grid_b != nullptr ? std::to_string(*out.grid_b): "N/A" )
+                + ", " + (out.grid_c != nullptr ? std::to_string(*out.grid_c): "N/A" )
+                + ")" << '\n'
+            << "Max bounce: " <<  std::to_string(out.max_bounce) << '\n'
+            << "Probe Termination: " << std::to_string(out.probe_terminate) << '\n';
         return os;
     }
 
@@ -117,10 +127,15 @@ private:
     Color bkc; // background color 
     float fov = 0.0f;
 
-    bool* global_illum = nullptr;
-    Eigen::Vector2i* rays_per_pixel = nullptr;
-    uint8_t* max_bounce = nullptr;
-    double* probe_terminate = nullptr; 
+    bool global_illum{};
+    
+    unsigned int* grid_a = nullptr;
+    unsigned int* grid_b = nullptr;
+    unsigned int* grid_c = nullptr;
+
+
+    unsigned int max_bounce{};
+    double probe_terminate{};
     bool contains_area_light = false;
     bool anti_aliase = false;
 };

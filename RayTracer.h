@@ -26,7 +26,7 @@ extern void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& li
 extern void JSONReadOutput(std::vector<Output*>& scene_outputs, nlohmann::json& output);
 
 
-static const float RESOLUTION = 0.50f;
+static const float RESOLUTION = 1.00f;
 
 using namespace Eigen;
 struct Hit;

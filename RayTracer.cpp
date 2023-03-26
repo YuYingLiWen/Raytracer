@@ -467,18 +467,21 @@ bool RayTracer::IsLightHidden(const Vector3d& light_center, const Ray& ray)
 
 void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final_ambient, Color& out_final_diffuse, const Output& output, const bool& gl)
 {
-    const double grid_size = Camera::GetInstance().GridSize();
+    const uint16_t grid_height = Camera::GetInstance().GridHeight();
+    const uint16_t grid_width = Camera::GetInstance().GridWidth();
+
+
     const double sample_size = Camera::GetInstance().SampleSize();
 
-    const double subpixel_center = Camera::GetInstance().PixelCenter() / grid_size;
-    const double total_samples = grid_size * grid_size * sample_size;
+    const double subpixel_center = Camera::GetInstance().PixelCenter() / (grid_height); // Why height, cause it is the "a" value
+    const double total_samples = grid_height * grid_width * sample_size;
 
     const double subpixel_size = subpixel_center + subpixel_center;
 
     //Scanline for each row -> column
-    for (uint32_t grid_y = 0; grid_y < grid_size; grid_y++)
+    for (uint32_t grid_y = 0; grid_y < grid_width; grid_y++)
     {
-        for (uint32_t grid_x = 0; grid_x < grid_size; grid_x++) // Samples area color around the current pixel
+        for (uint32_t grid_x = 0; grid_x < grid_height; grid_x++) // Samples area color around the current pixel
         {
             for (uint16_t sample = 0; sample < sample_size; sample++)
             {

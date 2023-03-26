@@ -105,7 +105,9 @@ void JSONReadLights(std::vector<Light*>& scene_lights, nlohmann::json& lights)
 
             bool use_center = (JSONGetValue(value, "usecenter") != nullptr) ? (bool)JSONGetValue(value, "usecenter") : false;
 
-            AreaLight* area = new AreaLight(type, id, is, points[0], points[1], points[2], points[3], use_center);
+            unsigned int n = (JSONGetValue(value, "n") != nullptr) ? (unsigned int)JSONGetValue(value, "n") : 4;
+
+            AreaLight* area = new AreaLight(type, id, is, points[0], points[1], points[2], points[3], use_center, n);
 
             scene_lights.push_back((Light*)area);
         }
@@ -129,7 +131,6 @@ void JSONReadOutput(std::vector<Output*>& scene_outputs, nlohmann::json& outputs
 {
     for (auto& item : outputs.items())
     {
-
         nlohmann::json value = item.value();
 
         OutputData data;
@@ -151,19 +152,36 @@ void JSONReadOutput(std::vector<Output*>& scene_outputs, nlohmann::json& outputs
         data.look_at = Vector3d(val_look.at(0), val_look.at(1), val_look.at(2));
         data.center = Vector3d(val_center.at(0), val_center.at(1), val_center.at(2));
 
-        if (JSONGetValue(value, "globalillum") != nullptr) data.global_illum = new bool(JSONGetValue(value, "globalillum"));
-        if (JSONGetValue(value, "antialiasing") != nullptr) data.antialiasing = (bool)(JSONGetValue(value, "antialiasing"));
-        if (JSONGetValue(value, "probterminate") != nullptr) data.probe_terminate = new double(JSONGetValue(value, "probterminate"));
-        if (JSONGetValue(value, "maxbounces") != nullptr) data.max_bounce = new uint8_t(JSONGetValue(value, "maxbounces"));
+        (JSONGetValue(value, "globalillum") != nullptr) ? data.global_illum = (bool)(JSONGetValue(value, "globalillum")) : data.global_illum = false;
+        (JSONGetValue(value, "antialiasing") != nullptr) ? data.antialiasing = (bool)(JSONGetValue(value, "antialiasing")) : data.antialiasing = false;
+        (JSONGetValue(value, "probterminate") != nullptr) ? data.probe_terminate = (double)(JSONGetValue(value, "probterminate")) : data.probe_terminate = 1.0f; //100% of killing itself
+        (JSONGetValue(value, "maxbounces") != nullptr) ? data.max_bounce = (uint8_t)(JSONGetValue(value, "maxbounces")) : data.max_bounce = 0;
         if (JSONGetValue(value, "raysperpixel") != nullptr)
         {
             auto val_ray_per_pixel = JSONGetValue(value, "raysperpixel");
-            data.rays_per_pixel = new Vector2i(val_ray_per_pixel.at(0), val_ray_per_pixel.at(1));
+
+            unsigned int* a = nullptr;
+            unsigned int* b = nullptr;
+            unsigned int* c = nullptr;
+
+            try { a = new unsigned int(val_ray_per_pixel.at(0)); }
+            catch (std::exception e) { std::cout << "A doesn't exist." << std::endl; }
+
+            try { b = new unsigned int(val_ray_per_pixel.at(1)); }
+            catch (std::exception e) { std::cout << "B doesn't exist." << std::endl; }
+
+            try { c = new unsigned int(val_ray_per_pixel.at(2)); }
+            catch (std::exception e) { std::cout << "C doesn't exist." << std::endl; }
+
+            data.grid_a = a;
+            data.grid_b = b;
+            data.grid_c = c;
         }
 
         Output* output = new Output();
         output->Set(data);
-        
+
+        //std::cout << *output << std::endl;
         scene_outputs.push_back(output);
     }
 }

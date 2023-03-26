@@ -18,24 +18,52 @@ void Camera::SetData(const Output& output, float resolution_factor = 1.0f)
 	up = output.up;
 	position = output.center;
 	right = up.cross(look_at);
-	height = (uint16_t)(output.size.y() * resolution_factor);
-	width = (uint16_t)(output.size.x() * resolution_factor);
+	height = (uint16_t)(output.GetHeight() * resolution_factor);
+	width = (uint16_t)(output.GetWidth() * resolution_factor);
 	aspect_ratio = (double)width / (double)height;
 	origin_lookat = position + look_at;
 
 	half_image = std::tan(Deg2Rad * fov * 0.5f);
 	pixel_center = half_image / height;
 
-	grid_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->x() : 1;
-	sample_size = output.rays_per_pixel != nullptr ? output.rays_per_pixel->y() : 1;
+	if (output.GetC() != nullptr)
+	{
+		grid_height = *output.GetA();
+		grid_width = *output.GetB(); 
+		sample_size = *output.GetC();
+	}
+	else 
+	{
+		if (output.GetB() != nullptr)
+		{
+			// Square
+			grid_height = *output.GetA();
+			grid_width = *output.GetA();
+			sample_size = *output.GetB();
+		}
+		else if (output.GetA() != nullptr)
+		{
+
+			grid_height = 1;
+			grid_width = 1;
+
+			sample_size = *output.GetA();
+		}
+		else
+		{
+			grid_height = 1;
+			grid_width = 1;
+			sample_size = 1;
+		}
+	}
+
 
 	scaled_pixel = half_image * aspect_ratio;
-	ambient_intensity = output.ai;
-	max_bounce = output.max_bounce != nullptr ? *output.max_bounce : 0;
-	probe_terminate = output.probe_terminate != nullptr ? *output.probe_terminate : 1.0f;
+	ambient_intensity = output.GetAmbientIntensity();
+	max_bounce = output.GetMaxBounce();
+	probe_terminate = output.GetProbeTerminate();
 
 	delete ppm_buffer;
-
 	ppm_buffer = new std::vector<Color>((size_t)width * (size_t)height);
 }
 
@@ -51,10 +79,6 @@ Ray Camera::MakeRay(Vector3d& destination) const
 
 std::vector<Color>& Camera::GetOutputBuffer() { return *ppm_buffer; }
 
-void Camera::ResetOuputBuffer()
-{
-	//if (ppm_buffer != nullptr) delete ppm_buffer;
-}
 
 uint16_t Camera::Height() const { return height; }
 uint16_t Camera::Width() const { return width; }
@@ -65,7 +89,9 @@ Vector3d Camera::LookAt() const { return look_at; }
 Vector3d Camera::Up() const { return up; }
 Vector3d Camera::Right() const { return right; }
 
-uint16_t Camera::GridSize() const { return grid_size; }
+uint16_t Camera::GridHeight() const { return grid_height; }
+uint16_t Camera::GridWidth() const { return grid_width; }
+
 uint16_t Camera::SampleSize() const { return sample_size; }
 Vector3d Camera::OriginLookAt() const { return origin_lookat; }
 double Camera::ScaledPixel() const { return scaled_pixel; }

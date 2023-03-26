@@ -28,8 +28,6 @@ public:
 
 	std::vector<Color>& GetOutputBuffer();
 
-	void ResetOuputBuffer();
-
 	uint16_t Height() const;
 	uint16_t Width() const;					
 	double AspectRatio() const;			
@@ -40,7 +38,9 @@ public:
 	Vector3d Right() const;					
 
 public:
-	uint16_t GridSize() const;		
+	uint16_t GridHeight() const;
+	uint16_t GridWidth() const;
+
 	uint16_t SampleSize() const;	
 	Vector3d OriginLookAt() const;	
 	double ScaledPixel() const;	
@@ -68,8 +68,9 @@ private:
 	Vector3d right;
 	Vector3d origin_lookat;
 
-	uint16_t grid_size{};
-	uint16_t sample_size{};
+	unsigned int grid_height{};
+	unsigned int grid_width{};
+	unsigned int sample_size{};
 
 	Color ambient_intensity;
 	uint8_t max_bounce{};
