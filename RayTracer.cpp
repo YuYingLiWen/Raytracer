@@ -100,25 +100,27 @@ void RayTracer::Trace(const Output& output)
             Vector3d pixel_shoot_at = camera.OriginLookAt() + px + py;
 
             Ray ray = camera.MakeRay(pixel_shoot_at);
+            bool hit = Raycast(ray);
 
-            if (Raycast(ray))
+            if (use_AA)
             {
-                if (use_AA)
-                {
-                    UseMSAA(px, py, final_ambient, final_diffuse, output, output.HasGlobalIllumination());
-                }
-                else // No AA
+                UseMSAA(px, py, final_ambient, final_diffuse, output, output.HasGlobalIllumination());
+            }
+            else // No AA
+            {
+                if (hit)
                 {
                     final_diffuse = GetDiffuseColor(ray, false);
                     final_ambient = GetAmbientColor(ray);
                 }
+                else
+                {
+                    final_ambient = output.GetBgColor();
+                }
+            }
 
-                if (use_specular) final_specular = GetSpecularColor(ray);
-            }
-            else
-            {
-                final_ambient = output.GetBgColor();
-            }
+            if (hit && use_specular) final_specular = GetSpecularColor(ray);
+
 
             output_buffer[counter] = (final_ambient * camera.AmbientIntensity() + final_diffuse + final_specular).Clamp();
 
