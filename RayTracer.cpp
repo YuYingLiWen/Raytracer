@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cfloat>
 
+static bool valid = true;
+
 struct Hit 
 {
     Vector3d point;
@@ -432,7 +434,8 @@ Color RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center,
         if (Raycast(next_ray))
             return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, hit_count + 1, gl);
     }
-
+    
+    valid = false;
     return Color::Black(); // If all else fails return black.
 }
 
@@ -480,7 +483,7 @@ void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final
     const double sample_size = Camera::GetInstance().SampleSize();
 
     const double subpixel_center = Camera::GetInstance().PixelCenter() / (grid_height); // Why height, cause it is the "a" value
-    const unsigned int total_samples = grid_height * grid_width * sample_size;
+    const unsigned int grid_cell_count = grid_height * grid_width;
 
     const double subpixel_size = subpixel_center + subpixel_center;
 
@@ -489,6 +492,9 @@ void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final
     {
         for (uint32_t grid_x = 0; grid_x < grid_height; grid_x++) // Samples area color around the current pixel
         {
+            Color diffuse, ambient;
+            unsigned int invalid_samples = 0;
+
             for (uint16_t sample = 0; sample < sample_size; sample++)
             {
                 Vector3d sub_px = px + (Camera::GetInstance().PixelCenter() - (2.0f * grid_x + 1.0f) * subpixel_center + CustomRandom::GetInstance().Generate(subpixel_size)) * Camera::GetInstance().Right(); //(2.0f * y + 1.0f) == 2k + 1 aka odd number
@@ -496,24 +502,32 @@ void RayTracer::UseMSAA(const Vector3d& px, const Vector3d& py, Color& out_final
                 Vector3d subpixel_shoot_at = Camera::GetInstance().OriginLookAt() + sub_px + sub_py;
 
                 Ray ray = Camera::GetInstance().MakeRay(subpixel_shoot_at);
+                
+                valid = true;
 
                 if (Raycast(ray))
                 {
-                    out_final_ambient += GetAmbientColor(ray) * Camera::GetInstance().AmbientIntensity();
+                    ambient += GetAmbientColor(ray) * Camera::GetInstance().AmbientIntensity();
 
-                    out_final_diffuse += GetDiffuseColor(ray, gl);
+                    diffuse += GetDiffuseColor(ray, gl);
+
+                    if (!valid) invalid_samples++;
                 }
                 else
                 {
-                    out_final_ambient += output.GetBgColor();
+                    ambient += output.GetBgColor();
                 }
             }
+            out_final_ambient += ambient / (sample_size - invalid_samples);
+
+            out_final_diffuse += diffuse / (sample_size - invalid_samples);
+
         }
     }
 
     //Final Colors
-    out_final_ambient /= total_samples;
-    out_final_diffuse /= total_samples;
+    out_final_ambient /= grid_cell_count;
+    out_final_diffuse /= grid_cell_count;
 }
 
 Color RayTracer::GetAmbientColor(const Ray& ray)
