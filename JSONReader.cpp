@@ -29,6 +29,10 @@ void JSONReadGeometries(std::vector<Geometry*>& scene_geo, nlohmann::json& geome
     for (auto& item : geometries.items())
     {
         auto& value = item.value();
+
+        bool isVisible = (JSONGetValue(value, "visible") != nullptr) ? (bool)JSONGetValue(value, "visible") : false;
+        if (!isVisible) continue;
+
         std::string type = (std::string)value.at("type");
         std::string name = (JSONGetValue(value, "comment") != nullptr) ? JSONGetValue(value, "comment") : "";
 
