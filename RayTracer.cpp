@@ -432,7 +432,13 @@ Color RayTracer::Helper_CalculatePointLightDiffuse(const Vector3d& light_center,
         Ray next_ray(ray.GetHitCoor(), YuMath::RandomDir(hit_normal));
 
         if (Raycast(next_ray))
-            return Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, hit_count + 1, gl);
+        {
+            Geometry* geo = ray.hit_obj;
+
+            Color color = (geo->GetDiffuseColor() * geo->GetDiffuseCoeff() * light_diffuse_intensity);
+
+            return color * (1.0f / (2.0f * PI)) + Helper_CalculatePointLightDiffuse(light_center, light_diffuse_intensity, next_ray, hit_count + 1, gl);
+        }
     }
     
     valid = false;
